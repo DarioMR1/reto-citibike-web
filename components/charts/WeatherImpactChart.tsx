@@ -26,14 +26,14 @@ const WeatherImpactChart = ({
 }: WeatherImpactChartProps) => {
   if (loading) {
     return (
-      <Card className="border border-gray-200 bg-white shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-gray-900">
+      <Card className="border-0 bg-white/70 backdrop-blur-md shadow-lg rounded-3xl">
+        <CardHeader className="bg-gradient-to-r from-slate-900/5 to-blue-800/5 backdrop-blur-sm rounded-t-3xl">
+          <CardTitle className="text-xl font-bold text-slate-900">
             Weather Impact Analysis
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="h-80 bg-gray-100 animate-pulse rounded"></div>
+        <CardContent className="p-8">
+          <div className="h-80 bg-slate-100/70 animate-pulse rounded-2xl"></div>
         </CardContent>
       </Card>
     );
@@ -41,16 +41,20 @@ const WeatherImpactChart = ({
 
   if (!data || data.length === 0) {
     return (
-      <Card className="border border-gray-200 bg-white shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-gray-900">
+      <Card className="border-0 bg-white/70 backdrop-blur-md shadow-lg rounded-3xl">
+        <CardHeader className="bg-gradient-to-r from-slate-900/5 to-blue-800/5 backdrop-blur-sm rounded-t-3xl">
+          <CardTitle className="text-xl font-bold text-slate-900">
             Weather Impact Analysis
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <Thermometer className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">Weather data not available</p>
+        <CardContent className="p-8">
+          <div className="text-center py-12">
+            <div className="p-4 bg-blue-800/10 rounded-2xl w-fit mx-auto mb-6">
+              <Thermometer className="w-12 h-12 text-blue-800" />
+            </div>
+            <p className="text-slate-700 font-medium">
+              Weather data not available
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -65,56 +69,74 @@ const WeatherImpactChart = ({
   const totalTrips = data.reduce((sum, item) => sum + item.trip_count, 0);
 
   return (
-    <Card className="border border-gray-200 bg-white shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="text-lg font-semibold text-gray-900">
-            Weather Impact Analysis
-          </CardTitle>
-          <div className="flex items-center mt-2">
-            <span className="text-sm text-gray-600">Optimal Temperature:</span>
-            <span className="text-lg font-bold text-blue-600 ml-2">
-              {optimalTemp.temperature}°C
-            </span>
-            <div className="flex items-center ml-4 text-green-600">
-              <TrendingUp className="w-4 h-4 mr-1" />
-              <span className="text-sm font-medium">
-                ${optimalTemp.avg_revenue.toFixed(2)} avg revenue
+    <Card className="border-0 bg-white/70 backdrop-blur-md shadow-lg rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300">
+      <CardHeader className="bg-gradient-to-r from-slate-900/5 to-blue-800/5 backdrop-blur-sm border-b border-slate-200/60">
+        <div className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-xl font-bold text-slate-900 mb-3">
+              Weather Impact Analysis
+            </CardTitle>
+            <div className="flex items-center">
+              <span className="text-sm font-semibold text-slate-700">
+                Optimal Temperature:
               </span>
+              <span className="text-lg font-bold text-blue-800 ml-2">
+                {optimalTemp.temperature}°C
+              </span>
+              <div className="flex items-center ml-6 text-emerald-600">
+                <div className="p-1 bg-emerald-100/70 rounded-lg mr-2">
+                  <TrendingUp className="w-3 h-3" />
+                </div>
+                <span className="text-sm font-semibold">
+                  ${optimalTemp.avg_revenue.toFixed(2)} avg revenue
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-sm font-semibold text-slate-600">
+              Total Trips
+            </div>
+            <div className="text-2xl font-bold text-slate-900">
+              {totalTrips.toLocaleString()}
             </div>
           </div>
         </div>
-        <div className="text-right">
-          <div className="text-sm text-gray-600">Total Trips</div>
-          <div className="text-xl font-bold text-gray-900">
-            {totalTrips.toLocaleString()}
-          </div>
-        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-8">
         <ResponsiveContainer width="100%" height={320}>
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis
               dataKey="temperature"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#374151", fontSize: 12, fontWeight: 500 }}
+              tick={{ fill: "#475569", fontSize: 12, fontWeight: 500 }}
               label={{
                 value: "Temperature (°C)",
                 position: "insideBottom",
                 offset: -5,
+                style: {
+                  textAnchor: "middle",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                },
               }}
             />
             <YAxis
               yAxisId="revenue"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#374151", fontSize: 12, fontWeight: 500 }}
+              tick={{ fill: "#475569", fontSize: 12, fontWeight: 500 }}
               label={{
                 value: "Average Revenue ($)",
                 angle: -90,
                 position: "insideLeft",
+                style: {
+                  textAnchor: "middle",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                },
               }}
             />
             <YAxis
@@ -122,11 +144,16 @@ const WeatherImpactChart = ({
               orientation="right"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#374151", fontSize: 12, fontWeight: 500 }}
+              tick={{ fill: "#475569", fontSize: 12, fontWeight: 500 }}
               label={{
                 value: "Trip Count",
                 angle: 90,
                 position: "insideRight",
+                style: {
+                  textAnchor: "middle",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                },
               }}
             />
             <Tooltip
@@ -139,12 +166,13 @@ const WeatherImpactChart = ({
               }}
               labelFormatter={(label) => `Temperature: ${label}°C`}
               contentStyle={{
-                backgroundColor: "white",
-                border: "1px solid #e5e7eb",
-                borderRadius: "8px",
+                backgroundColor: "rgba(255, 255, 255, 0.95)",
+                backdropFilter: "blur(8px)",
+                border: "1px solid rgba(148, 163, 184, 0.3)",
+                borderRadius: "12px",
                 boxShadow:
-                  "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-                color: "#1f2937",
+                  "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+                color: "#1e293b",
                 fontWeight: 500,
               }}
             />
@@ -152,10 +180,10 @@ const WeatherImpactChart = ({
               yAxisId="revenue"
               type="monotone"
               dataKey="avg_revenue"
-              stroke="#2563EB"
+              stroke="#1e40af"
               strokeWidth={3}
-              dot={{ fill: "#2563EB", strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, stroke: "#2563EB", strokeWidth: 2 }}
+              dot={{ fill: "#1e40af", strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6, stroke: "#1e40af", strokeWidth: 2 }}
             />
             <Line
               yAxisId="trips"
@@ -170,22 +198,28 @@ const WeatherImpactChart = ({
         </ResponsiveContainer>
 
         {/* Summary Stats */}
-        <div className="mt-4 grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
-          <div className="text-center">
-            <div className="text-sm text-gray-600">Min Temperature</div>
-            <div className="text-lg font-bold text-blue-600">
+        <div className="mt-8 grid grid-cols-3 gap-6 pt-6 border-t border-slate-200/60">
+          <div className="text-center p-4 bg-slate-50/70 backdrop-blur-sm rounded-xl">
+            <div className="text-sm font-semibold text-slate-600">
+              Min Temperature
+            </div>
+            <div className="text-lg font-bold text-blue-800">
               {Math.min(...data.map((d) => d.temperature))}°C
             </div>
           </div>
-          <div className="text-center">
-            <div className="text-sm text-gray-600">Max Temperature</div>
-            <div className="text-lg font-bold text-red-600">
+          <div className="text-center p-4 bg-slate-50/70 backdrop-blur-sm rounded-xl">
+            <div className="text-sm font-semibold text-slate-600">
+              Max Temperature
+            </div>
+            <div className="text-lg font-bold text-slate-700">
               {Math.max(...data.map((d) => d.temperature))}°C
             </div>
           </div>
-          <div className="text-center">
-            <div className="text-sm text-gray-600">Avg Revenue</div>
-            <div className="text-lg font-bold text-green-600">
+          <div className="text-center p-4 bg-slate-50/70 backdrop-blur-sm rounded-xl">
+            <div className="text-sm font-semibold text-slate-600">
+              Avg Revenue
+            </div>
+            <div className="text-lg font-bold text-emerald-600">
               $
               {(
                 data.reduce((sum, d) => sum + d.avg_revenue, 0) / data.length

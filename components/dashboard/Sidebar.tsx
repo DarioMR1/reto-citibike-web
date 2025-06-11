@@ -1,21 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Home,
-  CreditCard,
-  Users,
-  MessageSquare,
-  Package,
-  FileText,
-  BarChart3,
-  Settings,
-  Shield,
-  HelpCircle,
-  ChevronLeft,
-  Brain,
-  Activity,
-} from "lucide-react";
+import { Home, Activity, Shield, Package, ChevronLeft } from "lucide-react";
 
 interface SidebarProps {
   activeSection: string;
@@ -27,41 +13,36 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "models", label: "Models", icon: Brain },
     { id: "predictions", label: "Predictions", icon: Activity },
-    { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "anomalies", label: "Anomalies", icon: Shield },
     { id: "training", label: "Training", icon: Package },
-  ];
-
-  const supportItems = [
-    { id: "settings", label: "Settings", icon: Settings },
-    { id: "help", label: "Help", icon: HelpCircle },
   ];
 
   return (
     <div
       className={`${
         isCollapsed ? "w-16" : "w-64"
-      } bg-white border-r border-gray-200 transition-all duration-300 flex flex-col h-screen fixed left-0 top-0 z-50 shadow-sm`}
+      } bg-white/80 backdrop-blur-md border-r border-slate-200/60 transition-all duration-300 flex flex-col h-screen fixed left-0 top-0 z-50 shadow-xl`}
     >
       {/* Header */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-slate-200/60 bg-gradient-to-r from-slate-900/5 to-blue-800/5 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
-                <span className="text-white font-bold text-sm">CB</span>
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-800 to-slate-900 rounded-2xl flex items-center justify-center shadow-lg backdrop-blur-sm">
+                <span className="text-white font-bold text-lg">CB</span>
               </div>
-              <span className="font-bold text-xl text-gray-900">CitiBike</span>
+              <span className="font-bold text-2xl bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent">
+                CitiBike
+              </span>
             </div>
           )}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100/80 backdrop-blur-sm rounded-xl transition-all duration-200 hover:shadow-md"
           >
             <ChevronLeft
-              className={`w-5 h-5 text-gray-600 transition-transform ${
+              className={`w-5 h-5 text-slate-700 transition-transform duration-300 ${
                 isCollapsed ? "rotate-180" : ""
               }`}
             />
@@ -69,46 +50,31 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
         </div>
       </div>
 
-      {/* User Profile */}
-      {!isCollapsed && (
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center shadow-sm">
-              <span className="text-white font-semibold">DA</span>
-            </div>
-            <div>
-              <div className="font-semibold text-gray-900">Data Analyst</div>
-              <div className="text-sm text-gray-600">Analytics Team</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* General Menu */}
-      <div className="flex-1 py-6">
+      {/* Main Menu */}
+      <div className="flex-1 py-8">
         {!isCollapsed && (
-          <div className="px-6 mb-4">
-            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-              GENERAL
+          <div className="px-6 mb-6">
+            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+              NAVIGATION
             </span>
           </div>
         )}
-        <nav className="space-y-1 px-3">
+        <nav className="space-y-2 px-4">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
               <button
                 key={item.id}
                 onClick={() => onSectionChange(item.id)}
-                className={`w-full flex items-center px-3 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                className={`w-full flex items-center px-4 py-3.5 text-sm font-bold rounded-2xl transition-all duration-300 ${
                   activeSection === item.id
-                    ? "bg-blue-600 text-white shadow-sm border-2 border-blue-700"
-                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    ? "bg-gradient-to-r from-blue-800 to-slate-900 text-white shadow-xl backdrop-blur-sm transform scale-[1.02]"
+                    : "text-slate-700 hover:bg-slate-100/80 hover:text-slate-900 backdrop-blur-sm hover:shadow-md hover:transform hover:scale-[1.01]"
                 }`}
               >
                 <Icon
-                  className={`w-5 h-5 mr-3 ${
-                    activeSection === item.id ? "text-white" : "text-gray-600"
+                  className={`w-5 h-5 mr-4 transition-colors duration-200 ${
+                    activeSection === item.id ? "text-white" : "text-slate-600"
                   }`}
                 />
                 {!isCollapsed && <span>{item.label}</span>}
@@ -118,38 +84,16 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
         </nav>
       </div>
 
-      {/* Support Menu */}
-      <div className="py-6 border-t border-gray-200">
+      {/* Footer */}
+      <div className="p-6 border-t border-slate-200/60 bg-gradient-to-r from-slate-50/80 to-blue-50/80 backdrop-blur-sm">
         {!isCollapsed && (
-          <div className="px-6 mb-4">
-            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-              SUPPORT
-            </span>
+          <div className="text-center">
+            <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
+              ML Analytics Platform
+            </div>
+            <div className="text-sm text-slate-800 font-bold">v2.1.0</div>
           </div>
         )}
-        <nav className="space-y-1 px-3">
-          {supportItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onSectionChange(item.id)}
-                className={`w-full flex items-center px-3 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                  activeSection === item.id
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                }`}
-              >
-                <Icon
-                  className={`w-5 h-5 mr-3 ${
-                    activeSection === item.id ? "text-white" : "text-gray-600"
-                  }`}
-                />
-                {!isCollapsed && <span>{item.label}</span>}
-              </button>
-            );
-          })}
-        </nav>
       </div>
     </div>
   );

@@ -96,7 +96,7 @@ const IntegrationsTable = ({
   const getStatusBadge = (status: string, trainingStatus?: string) => {
     if (trainingStatus === "training") {
       return (
-        <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 font-medium">
+        <Badge className="bg-amber-100/80 text-amber-800 border-amber-200/60 font-semibold rounded-xl backdrop-blur-sm">
           Training
         </Badge>
       );
@@ -105,19 +105,19 @@ const IntegrationsTable = ({
     switch (status) {
       case "active":
         return (
-          <Badge className="bg-green-100 text-green-800 border-green-200 font-medium">
+          <Badge className="bg-emerald-100/80 text-emerald-800 border-emerald-200/60 font-semibold rounded-xl backdrop-blur-sm">
             Active
           </Badge>
         );
       case "inactive":
         return (
-          <Badge className="bg-red-100 text-red-800 border-red-200 font-medium">
+          <Badge className="bg-red-100/80 text-red-800 border-red-200/60 font-semibold rounded-xl backdrop-blur-sm">
             Inactive
           </Badge>
         );
       default:
         return (
-          <Badge className="bg-gray-100 text-gray-800 border-gray-200 font-medium">
+          <Badge className="bg-slate-100/80 text-slate-800 border-slate-200/60 font-semibold rounded-xl backdrop-blur-sm">
             Unknown
           </Badge>
         );
@@ -126,21 +126,21 @@ const IntegrationsTable = ({
 
   if (loading) {
     return (
-      <Card className="border border-gray-200 bg-white shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-gray-900">
+      <Card className="border-0 bg-white/70 backdrop-blur-md shadow-lg rounded-3xl">
+        <CardHeader className="bg-gradient-to-r from-slate-900/5 to-blue-800/5 backdrop-blur-sm rounded-t-3xl">
+          <CardTitle className="text-xl font-bold text-slate-900">
             CitiBike System Integration
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-8">
           <div className="space-y-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
-                className="flex items-center justify-between p-4 bg-gray-100 animate-pulse rounded"
+                className="flex items-center justify-between p-6 bg-slate-100/70 animate-pulse rounded-2xl backdrop-blur-sm"
               >
-                <div className="h-4 bg-gray-200 rounded w-32"></div>
-                <div className="h-4 bg-gray-200 rounded w-16"></div>
+                <div className="h-4 bg-slate-200/80 rounded-xl w-32"></div>
+                <div className="h-4 bg-slate-200/80 rounded-xl w-16"></div>
               </div>
             ))}
           </div>
@@ -150,19 +150,19 @@ const IntegrationsTable = ({
   }
 
   return (
-    <Card className="border border-gray-200 bg-white shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-semibold text-gray-900">
+    <Card className="border-0 bg-white/70 backdrop-blur-md shadow-lg rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300">
+      <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-slate-900/5 to-blue-800/5 backdrop-blur-sm border-b border-slate-200/60">
+        <CardTitle className="text-xl font-bold text-slate-900">
           CitiBike System Integration
         </CardTitle>
-        <span className="text-sm text-blue-600 cursor-pointer hover:underline font-medium">
+        <span className="text-sm text-blue-800 cursor-pointer hover:text-blue-900 font-semibold transition-colors duration-200 bg-blue-50/80 backdrop-blur-sm px-4 py-2 rounded-xl">
           See All
         </span>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-8">
         <div className="space-y-1">
           {/* Header */}
-          <div className="grid grid-cols-4 gap-4 pb-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+          <div className="grid grid-cols-4 gap-6 pb-4 text-xs font-bold text-slate-600 uppercase tracking-wider bg-slate-50/70 backdrop-blur-sm rounded-xl p-4">
             <span>System</span>
             <span>Type</span>
             <span>Uptime</span>
@@ -180,29 +180,31 @@ const IntegrationsTable = ({
             return (
               <div
                 key={integration.id}
-                className="grid grid-cols-4 gap-4 py-3 items-center border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors"
+                className="grid grid-cols-4 gap-6 py-6 items-center border-b border-slate-200/60 last:border-b-0 hover:bg-slate-50/50 backdrop-blur-sm transition-colors duration-200 rounded-xl px-4"
               >
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center border border-blue-100">
-                    <Icon className="w-4 h-4 text-blue-600" />
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-800/10 to-slate-900/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-blue-200/40 shadow-sm">
+                    <Icon className="w-5 h-5 text-blue-800" />
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">
+                    <div className="font-bold text-slate-900 text-sm">
                       {integration.name}
                     </div>
-                    {getStatusBadge(
-                      integration.status,
-                      isTraining ? "training" : undefined
-                    )}
+                    <div className="mt-2">
+                      {getStatusBadge(
+                        integration.status,
+                        isTraining ? "training" : undefined
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="text-sm text-gray-700 font-medium">
+                <div className="text-sm text-slate-700 font-semibold bg-slate-100/70 backdrop-blur-sm px-3 py-2 rounded-xl">
                   {integration.type}
                 </div>
-                <div className="text-sm font-bold text-gray-900">
+                <div className="text-sm font-bold text-slate-900 bg-white/80 backdrop-blur-sm px-3 py-2 rounded-xl shadow-sm">
                   {integration.rate}
                 </div>
-                <div className="text-sm text-gray-700 font-medium">
+                <div className="text-sm text-slate-700 font-semibold">
                   {integration.description}
                 </div>
               </div>

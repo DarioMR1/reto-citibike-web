@@ -21,7 +21,7 @@ const UserTypeDistributionChart = ({
   data,
   loading = false,
 }: UserTypeDistributionChartProps) => {
-  const COLORS = ["#2563EB", "#059669", "#D97706"];
+  const COLORS = ["#1e40af", "#059669", "#64748b"];
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -31,12 +31,16 @@ const UserTypeDistributionChart = ({
         100
       ).toFixed(1);
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-semibold text-gray-900">{data.payload.name}</p>
-          <p className="text-blue-600 font-medium">
+        <div className="bg-white/95 backdrop-blur-md p-4 border border-slate-200/60 rounded-xl shadow-2xl">
+          <p className="font-semibold text-slate-900 mb-2">
+            {data.payload.name}
+          </p>
+          <p className="text-blue-800 font-semibold">
             {data.value.toLocaleString()} trips
           </p>
-          <p className="text-gray-600 text-sm">{percentage}% of total</p>
+          <p className="text-slate-600 text-sm font-medium">
+            {percentage}% of total
+          </p>
         </div>
       );
     }
@@ -45,14 +49,14 @@ const UserTypeDistributionChart = ({
 
   if (loading) {
     return (
-      <Card className="border border-gray-200 bg-white shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-gray-900">
+      <Card className="border-0 bg-white/70 backdrop-blur-md shadow-lg rounded-3xl">
+        <CardHeader className="bg-gradient-to-r from-slate-900/5 to-blue-800/5 backdrop-blur-sm rounded-t-3xl">
+          <CardTitle className="text-xl font-bold text-slate-900">
             User Type Distribution
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="h-80 bg-gray-100 animate-pulse rounded"></div>
+        <CardContent className="p-8">
+          <div className="h-80 bg-slate-100/70 animate-pulse rounded-2xl"></div>
         </CardContent>
       </Card>
     );
@@ -60,16 +64,18 @@ const UserTypeDistributionChart = ({
 
   if (!data || data.length === 0) {
     return (
-      <Card className="border border-gray-200 bg-white shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-gray-900">
+      <Card className="border-0 bg-white/70 backdrop-blur-md shadow-lg rounded-3xl">
+        <CardHeader className="bg-gradient-to-r from-slate-900/5 to-blue-800/5 backdrop-blur-sm rounded-t-3xl">
+          <CardTitle className="text-xl font-bold text-slate-900">
             User Type Distribution
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">No user data available</p>
+        <CardContent className="p-8">
+          <div className="text-center py-12">
+            <div className="p-4 bg-blue-800/10 rounded-2xl w-fit mx-auto mb-6">
+              <Users className="w-12 h-12 text-blue-800" />
+            </div>
+            <p className="text-slate-700 font-medium">No user data available</p>
           </div>
         </CardContent>
       </Card>
@@ -92,46 +98,52 @@ const UserTypeDistributionChart = ({
 
   const getIcon = (name: string) => {
     if (name.toLowerCase().includes("member")) {
-      return <UserCheck className="w-5 h-5 text-blue-600" />;
+      return <UserCheck className="w-5 h-5 text-blue-800" />;
     }
     if (name.toLowerCase().includes("casual")) {
-      return <UserX className="w-5 h-5 text-green-600" />;
+      return <UserX className="w-5 h-5 text-emerald-600" />;
     }
-    return <Users className="w-5 h-5 text-orange-600" />;
+    return <Users className="w-5 h-5 text-slate-700" />;
   };
 
   const getColor = (name: string) => {
-    if (name.toLowerCase().includes("member")) return "#2563EB";
+    if (name.toLowerCase().includes("member")) return "#1e40af";
     if (name.toLowerCase().includes("casual")) return "#059669";
-    return "#D97706";
+    return "#64748b";
   };
 
   return (
-    <Card className="border border-gray-200 bg-white shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="text-lg font-semibold text-gray-900">
-            User Type Distribution
-          </CardTitle>
-          <div className="flex items-center mt-2">
-            <Users className="w-4 h-4 text-gray-600 mr-1" />
-            <span className="text-sm text-gray-600">
-              Total Users: {total.toLocaleString()}
-            </span>
+    <Card className="border-0 bg-white/70 backdrop-blur-md shadow-lg rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300">
+      <CardHeader className="bg-gradient-to-r from-slate-900/5 to-blue-800/5 backdrop-blur-sm border-b border-slate-200/60">
+        <div className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-xl font-bold text-slate-900 mb-3">
+              User Type Distribution
+            </CardTitle>
+            <div className="flex items-center">
+              <div className="p-1 bg-blue-800/10 rounded-lg mr-2">
+                <Users className="w-3 h-3 text-blue-800" />
+              </div>
+              <span className="text-sm font-semibold text-slate-700">
+                Total Users: {total.toLocaleString()}
+              </span>
+            </div>
           </div>
-        </div>
-        <div className="text-right">
-          <div className="text-sm text-gray-600">Most Active</div>
-          <div className="text-lg font-bold text-blue-600">
-            {memberData && casualData
-              ? memberData.value > casualData.value
-                ? "Members"
-                : "Casual"
-              : data[0]?.name || "N/A"}
+          <div className="text-right">
+            <div className="text-sm font-semibold text-slate-600">
+              Most Active
+            </div>
+            <div className="text-lg font-bold text-blue-800">
+              {memberData && casualData
+                ? memberData.value > casualData.value
+                  ? "Members"
+                  : "Casual"
+                : data[0]?.name || "N/A"}
+            </div>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-8">
         <ResponsiveContainer width="100%" height={250}>
           <PieChart>
             <Pie
@@ -157,7 +169,7 @@ const UserTypeDistributionChart = ({
         </ResponsiveContainer>
 
         {/* User Type Details */}
-        <div className="space-y-3 mt-4">
+        <div className="space-y-4 mt-6">
           {data.map((item, index) => {
             const percentage = ((item.value / total) * 100).toFixed(1);
             const color = getColor(item.name);
@@ -165,22 +177,31 @@ const UserTypeDistributionChart = ({
             return (
               <div
                 key={index}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                className="flex items-center justify-between p-4 bg-slate-50/70 backdrop-blur-sm rounded-xl hover:bg-slate-50/90 transition-colors duration-200"
               >
-                <div className="flex items-center space-x-3">
-                  {getIcon(item.name)}
+                <div className="flex items-center space-x-4">
+                  <div className="p-2 bg-white/80 rounded-lg">
+                    {getIcon(item.name)}
+                  </div>
                   <div>
-                    <div className="font-medium text-gray-900">{item.name}</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="font-semibold text-slate-900">
+                      {item.name}
+                    </div>
+                    <div className="text-sm text-slate-600 font-medium">
                       {percentage}% of total
                     </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-gray-900" style={{ color }}>
+                  <div
+                    className="font-bold text-slate-900 text-lg"
+                    style={{ color }}
+                  >
                     {item.value.toLocaleString()}
                   </div>
-                  <div className="text-sm text-gray-500">trips</div>
+                  <div className="text-sm text-slate-500 font-medium">
+                    trips
+                  </div>
                 </div>
               </div>
             );
@@ -189,17 +210,21 @@ const UserTypeDistributionChart = ({
 
         {/* Summary Statistics */}
         {memberData && casualData && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <div className="text-sm text-gray-600">Member Ratio</div>
-                <div className="text-lg font-bold text-blue-600">
+          <div className="mt-6 pt-6 border-t border-slate-200/60">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="text-center p-4 bg-slate-50/70 backdrop-blur-sm rounded-xl">
+                <div className="text-sm font-semibold text-slate-600">
+                  Member Ratio
+                </div>
+                <div className="text-2xl font-bold text-blue-800">
                   {((memberData.value / total) * 100).toFixed(1)}%
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-600">Casual Ratio</div>
-                <div className="text-lg font-bold text-green-600">
+              <div className="text-center p-4 bg-slate-50/70 backdrop-blur-sm rounded-xl">
+                <div className="text-sm font-semibold text-slate-600">
+                  Casual Ratio
+                </div>
+                <div className="text-2xl font-bold text-emerald-600">
                   {((casualData.value / total) * 100).toFixed(1)}%
                 </div>
               </div>

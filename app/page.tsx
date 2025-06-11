@@ -2,35 +2,12 @@
 
 import { useState, useEffect, ChangeEvent } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
-import KPICards from "@/components/dashboard/KPICards";
-import IntegrationsTable from "@/components/dashboard/IntegrationsTable";
-import RevenueByHourChart from "@/components/charts/RevenueByHourChart";
-import StationBalanceChart from "@/components/charts/StationBalanceChart";
-import UserTypeDistributionChart from "@/components/charts/UserTypeDistributionChart";
-import AnomaliesByHourChart from "@/components/charts/AnomaliesByHourChart";
-import WeatherImpactChart from "@/components/charts/WeatherImpactChart";
-import AnomaliesScatterChart from "@/components/charts/AnomaliesScatterChart";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import Dashboard from "@/components/dashboard/Dashboard";
+import Training from "@/components/dashboard/Training";
+import Predictions from "@/components/dashboard/Predictions";
+import Anomalies from "@/components/dashboard/Anomalies";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, AlertTriangle, RefreshCw } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 // API Base URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -330,410 +307,72 @@ export default function CitiBikeAnalytics() {
     }));
   };
 
-  const renderDashboard = () => (
-    <div className="space-y-6">
-      {/* Page Title */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            CitiBike Analytics Dashboard
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Real-time insights from Snowflake data warehouse
-          </p>
-        </div>
-        <Button
-          onClick={fetchChartData}
-          variant="outline"
-          size="sm"
-          disabled={chartsLoading}
-        >
-          <RefreshCw
-            className={`w-4 h-4 mr-2 ${chartsLoading ? "animate-spin" : ""}`}
-          />
-          Refresh Data
-        </Button>
-      </div>
-
-      {/* KPIs */}
-      <KPICards data={kpis} loading={loading} />
-
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Revenue by Hour - takes 2 columns */}
-        <div className="lg:col-span-2">
-          <RevenueByHourChart
-            data={revenueByHourData}
-            loading={chartsLoading}
-          />
-        </div>
-
-        {/* User Type Distribution */}
-        <UserTypeDistributionChart
-          data={userTypeData}
-          loading={chartsLoading}
-        />
-      </div>
-
-      {/* Second row of charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Station Balance */}
-        <StationBalanceChart
-          data={stationBalanceData}
-          loading={chartsLoading}
-        />
-
-        {/* Weather Impact */}
-        <WeatherImpactChart data={weatherImpactData} loading={chartsLoading} />
-      </div>
-
-      {/* Anomalies Chart */}
-      <AnomaliesByHourChart data={anomaliesData} loading={chartsLoading} />
-
-      {/* Integrations Table */}
-      <IntegrationsTable modelStatus={status || undefined} loading={loading} />
-    </div>
-  );
-
-  const renderTraining = () => (
-    <div className="space-y-6">
-      {/* Page Title */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Model Training</h1>
-        <p className="text-gray-600 mt-2">
-          Train and manage machine learning models with real CitiBike data
-        </p>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="border border-gray-200 bg-white shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-gray-900">
-              Supervised Model Training
-            </CardTitle>
-            <CardDescription className="text-gray-600">
-              Train models to predict excess minute revenue from CitiBike trips
-              using Snowflake data
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={trainSupervisedModel}
-              disabled={trainingSupervised}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {trainingSupervised && (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              )}
-              Train Revenue Prediction Model
-            </Button>
-            {status?.supervised_model && (
-              <div className="mt-3 p-2 bg-green-50 rounded-lg">
-                <p className="text-sm text-green-800">
-                  ✅ Model trained and ready for predictions
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border border-gray-200 bg-white shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-gray-900">
-              Anomaly Detection Training
-            </CardTitle>
-            <CardDescription className="text-gray-600">
-              Train models to detect unusual patterns in station usage using
-              machine learning
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={trainUnsupervisedModel}
-              disabled={trainingUnsupervised}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-              variant="secondary"
-            >
-              {trainingUnsupervised && (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              )}
-              Train Anomaly Detection
-            </Button>
-            {status?.unsupervised_model && (
-              <div className="mt-3 p-2 bg-green-50 rounded-lg">
-                <p className="text-sm text-green-800">
-                  ✅ Model trained and detecting anomalies
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-
-  const renderPredictions = () => (
-    <div className="space-y-6">
-      {/* Page Title */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Revenue Predictions
-        </h1>
-        <p className="text-gray-600 mt-2">
-          Make single trip revenue predictions using trained ML models
-        </p>
-      </div>
-
-      <Card className="border border-gray-200 bg-white shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-gray-900">
-            Single Trip Revenue Prediction
-          </CardTitle>
-          <CardDescription className="text-gray-600">
-            Predict excess minute revenue for a specific CitiBike trip scenario
-            using real-time ML models
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="station" className="text-gray-900 font-medium">
-                Station
-              </Label>
-              <Select
-                value={predictionForm.station_id}
-                onValueChange={handleSelectChange("station_id")}
-              >
-                <SelectTrigger className="border-gray-300">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="HB101">HB101</SelectItem>
-                  <SelectItem value="HB102">HB102</SelectItem>
-                  <SelectItem value="HB103">HB103</SelectItem>
-                  <SelectItem value="JC001">JC001</SelectItem>
-                  <SelectItem value="JC002">JC002</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="hour" className="text-gray-900 font-medium">
-                Hour
-              </Label>
-              <Input
-                type="number"
-                min="0"
-                max="23"
-                value={predictionForm.hour}
-                onChange={handleInputChange("hour")}
-                className="border-gray-300 text-gray-900"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="month" className="text-gray-900 font-medium">
-                Month
-              </Label>
-              <Input
-                type="number"
-                min="1"
-                max="12"
-                value={predictionForm.month}
-                onChange={handleInputChange("month")}
-                className="border-gray-300 text-gray-900"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label
-                htmlFor="temperature"
-                className="text-gray-900 font-medium"
-              >
-                Temperature (°C)
-              </Label>
-              <Input
-                type="number"
-                min="-10"
-                max="40"
-                step="0.5"
-                value={predictionForm.temperature}
-                onChange={handleInputChange("temperature")}
-                className="border-gray-300 text-gray-900"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="humidity" className="text-gray-900 font-medium">
-                Humidity (%)
-              </Label>
-              <Input
-                type="number"
-                min="0"
-                max="100"
-                value={predictionForm.humidity}
-                onChange={handleInputChange("humidity")}
-                className="border-gray-300 text-gray-900"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="duration" className="text-gray-900 font-medium">
-                Duration (minutes)
-              </Label>
-              <Input
-                type="number"
-                min="5"
-                max="120"
-                value={predictionForm.duration}
-                onChange={handleInputChange("duration")}
-                className="border-gray-300 text-gray-900"
-              />
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="weekend"
-                checked={predictionForm.is_weekend}
-                onCheckedChange={handleCheckboxChange}
-              />
-              <Label htmlFor="weekend" className="text-gray-900 font-medium">
-                Weekend
-              </Label>
-            </div>
-          </div>
-
-          <Button
-            onClick={makePrediction}
-            disabled={predicting || !status?.supervised_model}
-            className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            {predicting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Make Prediction
-          </Button>
-
-          {!status?.supervised_model && (
-            <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
-              <p className="text-sm text-yellow-800">
-                ⚠️ Please train the supervised model first
-              </p>
-            </div>
-          )}
-
-          {predictionResult && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Prediction Results
-              </h3>
-              <div className="grid gap-2 md:grid-cols-3">
-                <div>
-                  <span className="text-gray-700 font-medium">
-                    Predicted Revenue:
-                  </span>
-                  <span className="text-green-600 font-bold ml-2">
-                    ${predictionResult.prediction.toFixed(2)}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-700 font-medium">
-                    Theoretical Revenue:
-                  </span>
-                  <span className="text-blue-600 font-bold ml-2">
-                    ${predictionResult.theoretical_revenue.toFixed(2)}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-700 font-medium">
-                    Model Difference:
-                  </span>
-                  <span
-                    className={`font-bold ml-2 ${
-                      predictionResult.model_difference >= 0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    ${predictionResult.model_difference.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderAnomalies = () => (
-    <div className="space-y-6">
-      {/* Page Title */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Anomaly Detection</h1>
-        <p className="text-gray-600 mt-2">
-          Analyze unusual patterns in CitiBike station usage using ML algorithms
-        </p>
-      </div>
-
-      {status?.unsupervised_model ? (
-        <>
-          {/* Anomaly Scatter Plot */}
-          <AnomaliesScatterChart
-            normalPoints={anomaliesScatterData.normal_points}
-            anomalyPoints={anomaliesScatterData.anomaly_points}
-            loading={chartsLoading}
-          />
-
-          {/* Anomalies by Hour */}
-          <AnomaliesByHourChart data={anomaliesData} loading={chartsLoading} />
-
-          {/* Additional anomaly analysis can be added here */}
-        </>
-      ) : (
-        <Card className="border border-gray-200 bg-white shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-gray-900">
-              Anomaly Detection Analysis
-            </CardTitle>
-            <CardDescription className="text-gray-600">
-              Advanced ML-based anomaly detection for CitiBike station usage
-              patterns
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-              <p className="text-gray-700 font-medium mb-4">
-                Train the anomaly detection model first to see detailed analysis
-              </p>
-              <Button
-                onClick={trainUnsupervisedModel}
-                disabled={trainingUnsupervised}
-                className="bg-purple-600 hover:bg-purple-700 text-white"
-              >
-                {trainingUnsupervised && (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                )}
-                Train Anomaly Detection
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-
   const renderContent = () => {
     switch (activeSection) {
       case "dashboard":
-        return renderDashboard();
+        return (
+          <Dashboard
+            kpis={kpis}
+            status={status}
+            loading={loading}
+            chartsLoading={chartsLoading}
+            revenueByHourData={revenueByHourData}
+            stationBalanceData={stationBalanceData}
+            userTypeData={userTypeData}
+            anomaliesData={anomaliesData}
+            weatherImpactData={weatherImpactData}
+            onRefreshData={fetchChartData}
+          />
+        );
       case "training":
-        return renderTraining();
+        return (
+          <Training
+            status={status}
+            trainingSupervised={trainingSupervised}
+            trainingUnsupervised={trainingUnsupervised}
+            onTrainSupervised={trainSupervisedModel}
+            onTrainUnsupervised={trainUnsupervisedModel}
+          />
+        );
       case "predictions":
-        return renderPredictions();
+        return (
+          <Predictions
+            status={status}
+            predictionForm={predictionForm}
+            predictionResult={predictionResult}
+            predicting={predicting}
+            onInputChange={handleInputChange}
+            onSelectChange={handleSelectChange}
+            onCheckboxChange={handleCheckboxChange}
+            onMakePrediction={makePrediction}
+          />
+        );
       case "anomalies":
-        return renderAnomalies();
+        return (
+          <Anomalies
+            status={status}
+            anomaliesData={anomaliesData}
+            anomaliesScatterData={anomaliesScatterData}
+            chartsLoading={chartsLoading}
+            trainingUnsupervised={trainingUnsupervised}
+            onTrainUnsupervised={trainUnsupervisedModel}
+          />
+        );
       default:
-        return renderDashboard();
+        return (
+          <Dashboard
+            kpis={kpis}
+            status={status}
+            loading={loading}
+            chartsLoading={chartsLoading}
+            revenueByHourData={revenueByHourData}
+            stationBalanceData={stationBalanceData}
+            userTypeData={userTypeData}
+            anomaliesData={anomaliesData}
+            weatherImpactData={weatherImpactData}
+            onRefreshData={fetchChartData}
+          />
+        );
     }
   };
 
