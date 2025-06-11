@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect, ChangeEvent, useCallback, useRef } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Dashboard from "@/components/dashboard/Dashboard";
 import Training from "@/components/dashboard/Training";
@@ -11,6 +11,20 @@ import { AlertTriangle } from "lucide-react";
 
 // API Base URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+// Cache configuration
+const CACHE_DURATION = {
+  STATUS: 30 * 1000, // 30 seconds
+  DASHBOARD: 2 * 60 * 1000, // 2 minutes
+  CHARTS: 5 * 60 * 1000, // 5 minutes
+  ANOMALIES: 10 * 60 * 1000, // 10 minutes
+};
+
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  expiry: number;
+}
 
 interface SystemStatus {
   supervised_model: boolean;
@@ -45,6 +59,56 @@ interface PredictionResult {
   prediction: number;
   theoretical_revenue: number;
   model_difference: number;
+}
+
+// Cache manager class
+class CacheManager {
+  private cache = new Map<string, CacheEntry<any>>();
+
+  set<T>(key: string, data: T, duration: number): void {
+    const now = Date.now();
+    this.cache.set(key, {
+      data,
+      timestamp: now,
+      expiry: now + duration,
+    });
+  }
+
+  get<T>(key: string): T | null {
+    const entry = this.cache.get(key);
+    if (!entry) return null;
+
+    const now = Date.now();
+    if (now > entry.expiry) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    return entry.data;
+  }
+
+  invalidate(key: string): void {
+    this.cache.delete(key);
+  }
+
+  invalidatePattern(pattern: string): void {
+    for (const key of this.cache.keys()) {
+      if (key.includes(pattern)) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+
+  getStats(): { size: number; keys: string[] } {
+    return {
+      size: this.cache.size,
+      keys: Array.from(this.cache.keys()),
+    };
+  }
 }
 
 export default function CitiBikeAnalytics() {
@@ -86,119 +150,182 @@ export default function CitiBikeAnalytics() {
     useState<PredictionResult | null>(null);
   const [predicting, setPredicting] = useState(false);
 
+  // Cache manager instance
+  const cacheManager = useRef(new CacheManager());
+
+  // Cache-aware fetch function
+  const fetchWithCache = useCallback(
+    async (
+      url: string,
+      cacheKey: string,
+      cacheDuration: number,
+      forceRefresh = false
+    ): Promise<any | null> => {
+      // Check cache first (unless force refresh)
+      if (!forceRefresh) {
+        const cachedData = cacheManager.current.get(cacheKey);
+        if (cachedData) {
+          console.log(`📦 Cache hit for ${cacheKey}`);
+          return cachedData;
+        }
+      }
+
+      try {
+        console.log(`🌐 Fetching from API: ${cacheKey}`);
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Cache the successful response
+        cacheManager.current.set(cacheKey, data, cacheDuration);
+
+        return data;
+      } catch (err) {
+        console.error(`❌ Error fetching ${cacheKey}:`, err);
+        return null;
+      }
+    },
+    []
+  );
+
+  const fetchStatus = useCallback(
+    async (forceRefresh = false) => {
+      const data = await fetchWithCache(
+        `${API_BASE_URL}/api/status`,
+        "system_status",
+        CACHE_DURATION.STATUS,
+        forceRefresh
+      );
+
+      if (data) {
+        setStatus(data);
+      } else {
+        setError("Failed to fetch system status");
+      }
+    },
+    [fetchWithCache]
+  );
+
+  const fetchDashboard = useCallback(
+    async (forceRefresh = false) => {
+      setLoading(true);
+      try {
+        const data = await fetchWithCache(
+          `${API_BASE_URL}/api/dashboard`,
+          "dashboard_kpis",
+          CACHE_DURATION.DASHBOARD,
+          forceRefresh
+        );
+
+        if (data?.success) {
+          setKpis(data.kpis);
+        } else {
+          setError("Failed to fetch dashboard data");
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchWithCache]
+  );
+
+  const fetchChartData = useCallback(
+    async (forceRefresh = false) => {
+      setChartsLoading(true);
+      try {
+        // Fetch all chart data with caching
+        const chartEndpoints = [
+          {
+            url: `${API_BASE_URL}/api/visualizations/revenue_analysis`,
+            key: "chart_revenue",
+            setter: setRevenueByHourData,
+          },
+          {
+            url: `${API_BASE_URL}/api/visualizations/station_balance`,
+            key: "chart_station",
+            setter: setStationBalanceData,
+          },
+          {
+            url: `${API_BASE_URL}/api/visualizations/user_distribution`,
+            key: "chart_user",
+            setter: setUserTypeData,
+          },
+          {
+            url: `${API_BASE_URL}/api/visualizations/anomalies_by_hour`,
+            key: "chart_anomalies",
+            setter: setAnomaliesData,
+          },
+          {
+            url: `${API_BASE_URL}/api/visualizations/weather_impact`,
+            key: "chart_weather",
+            setter: setWeatherImpactData,
+          },
+        ];
+
+        // Fetch all charts in parallel with caching
+        const promises = chartEndpoints.map(async ({ url, key, setter }) => {
+          const data = await fetchWithCache(
+            url,
+            key,
+            CACHE_DURATION.CHARTS,
+            forceRefresh
+          );
+
+          if (data?.success) {
+            setter(data.chart_data || []);
+          }
+        });
+
+        await Promise.all(promises);
+      } catch (err) {
+        console.error("Error fetching chart data:", err);
+        setError("Failed to fetch chart data");
+      } finally {
+        setChartsLoading(false);
+      }
+    },
+    [fetchWithCache]
+  );
+
+  const fetchAnomalyData = useCallback(
+    async (forceRefresh = false) => {
+      const data = await fetchWithCache(
+        `${API_BASE_URL}/api/visualizations/anomalies_scatter`,
+        "anomalies_scatter",
+        CACHE_DURATION.ANOMALIES,
+        forceRefresh
+      );
+
+      if (data?.success) {
+        setAnomaliesScatterData({
+          normal_points: data.normal_points || [],
+          anomaly_points: data.anomaly_points || [],
+        });
+      }
+    },
+    [fetchWithCache]
+  );
+
+  // Initial data loading
   useEffect(() => {
     fetchStatus();
     fetchDashboard();
+
     if (activeSection === "dashboard") {
       fetchChartData();
     } else if (activeSection === "anomalies") {
       fetchAnomalyData();
     }
-  }, [activeSection]);
-
-  const fetchStatus = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/status`);
-      const data = await response.json();
-      setStatus(data);
-    } catch (err) {
-      setError("Failed to fetch system status");
-    }
-  };
-
-  const fetchDashboard = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/dashboard`);
-      const data = await response.json();
-      if (data.success) {
-        setKpis(data.kpis);
-      }
-    } catch (err) {
-      setError("Failed to fetch dashboard data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchChartData = async () => {
-    setChartsLoading(true);
-    try {
-      // Fetch all chart data in parallel
-      const [
-        revenueResponse,
-        stationResponse,
-        userResponse,
-        anomaliesResponse,
-        weatherResponse,
-      ] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/visualizations/revenue_analysis`),
-        fetch(`${API_BASE_URL}/api/visualizations/station_balance`),
-        fetch(`${API_BASE_URL}/api/visualizations/user_distribution`),
-        fetch(`${API_BASE_URL}/api/visualizations/anomalies_by_hour`),
-        fetch(`${API_BASE_URL}/api/visualizations/weather_impact`),
-      ]);
-
-      if (revenueResponse.ok) {
-        const revenueData = await revenueResponse.json();
-        if (revenueData.success) {
-          setRevenueByHourData(revenueData.chart_data || []);
-        }
-      }
-
-      if (stationResponse.ok) {
-        const stationData = await stationResponse.json();
-        if (stationData.success) {
-          setStationBalanceData(stationData.chart_data || []);
-        }
-      }
-
-      if (userResponse.ok) {
-        const userData = await userResponse.json();
-        if (userData.success) {
-          setUserTypeData(userData.chart_data || []);
-        }
-      }
-
-      if (anomaliesResponse.ok) {
-        const anomaliesHourData = await anomaliesResponse.json();
-        if (anomaliesHourData.success) {
-          setAnomaliesData(anomaliesHourData.chart_data || []);
-        }
-      }
-
-      if (weatherResponse.ok) {
-        const weatherData = await weatherResponse.json();
-        if (weatherData.success) {
-          setWeatherImpactData(weatherData.chart_data || []);
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching chart data:", err);
-      setError("Failed to fetch chart data");
-    } finally {
-      setChartsLoading(false);
-    }
-  };
-
-  const fetchAnomalyData = async () => {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/visualizations/anomalies_scatter`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setAnomaliesScatterData({
-            normal_points: data.normal_points || [],
-            anomaly_points: data.anomaly_points || [],
-          });
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching anomaly scatter data:", err);
-    }
-  };
+  }, [
+    activeSection,
+    fetchStatus,
+    fetchDashboard,
+    fetchChartData,
+    fetchAnomalyData,
+  ]);
 
   const trainSupervisedModel = async () => {
     setTrainingSupervised(true);
@@ -209,8 +336,14 @@ export default function CitiBikeAnalytics() {
       });
       const data = await response.json();
       if (data.success) {
-        await fetchStatus();
-        await fetchDashboard(); // Refresh KPIs
+        // Invalidate relevant caches after training
+        cacheManager.current.invalidate("system_status");
+        cacheManager.current.invalidate("dashboard_kpis");
+        cacheManager.current.invalidatePattern("chart_");
+
+        // Force refresh data
+        await fetchStatus(true);
+        await fetchDashboard(true);
         setError("");
       } else {
         setError(data.message || "Training failed");
@@ -231,9 +364,16 @@ export default function CitiBikeAnalytics() {
       });
       const data = await response.json();
       if (data.success) {
-        await fetchStatus();
-        await fetchDashboard(); // Refresh KPIs
-        await fetchChartData(); // Refresh anomaly charts
+        // Invalidate relevant caches after training
+        cacheManager.current.invalidate("system_status");
+        cacheManager.current.invalidate("dashboard_kpis");
+        cacheManager.current.invalidatePattern("chart_");
+        cacheManager.current.invalidate("anomalies_scatter");
+
+        // Force refresh data
+        await fetchStatus(true);
+        await fetchDashboard(true);
+        await fetchChartData(true);
         setError("");
       } else {
         setError(data.message || "Training failed");
@@ -268,6 +408,27 @@ export default function CitiBikeAnalytics() {
       setPredicting(false);
     }
   };
+
+  // Force refresh function for manual cache invalidation
+  const handleRefreshData = useCallback(() => {
+    console.log("🔄 Force refreshing all data...");
+    cacheManager.current.clear();
+
+    if (activeSection === "dashboard") {
+      fetchStatus(true);
+      fetchDashboard(true);
+      fetchChartData(true);
+    } else if (activeSection === "anomalies") {
+      fetchStatus(true);
+      fetchAnomalyData(true);
+    }
+  }, [
+    activeSection,
+    fetchStatus,
+    fetchDashboard,
+    fetchChartData,
+    fetchAnomalyData,
+  ]);
 
   const handleInputChange =
     (field: keyof PredictionRequest) => (e: ChangeEvent<HTMLInputElement>) => {
@@ -321,7 +482,7 @@ export default function CitiBikeAnalytics() {
             userTypeData={userTypeData}
             anomaliesData={anomaliesData}
             weatherImpactData={weatherImpactData}
-            onRefreshData={fetchChartData}
+            onRefreshData={handleRefreshData}
           />
         );
       case "training":
@@ -370,14 +531,14 @@ export default function CitiBikeAnalytics() {
             userTypeData={userTypeData}
             anomaliesData={anomaliesData}
             weatherImpactData={weatherImpactData}
-            onRefreshData={fetchChartData}
+            onRefreshData={handleRefreshData}
           />
         );
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100/50 flex">
       <Sidebar
         activeSection={activeSection}
         onSectionChange={setActiveSection}
@@ -387,12 +548,29 @@ export default function CitiBikeAnalytics() {
         <div className="p-6">
           {/* Error Alert */}
           {error && (
-            <Alert className="mb-6 bg-red-50 border-red-200">
+            <Alert className="mb-6 bg-red-50/80 backdrop-blur-sm border-red-200/60 rounded-2xl shadow-lg">
               <AlertTriangle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
+              <AlertDescription className="text-red-800 font-medium">
                 {error}
               </AlertDescription>
             </Alert>
+          )}
+
+          {/* Cache Debug Info (only in development) */}
+          {process.env.NODE_ENV === "development" && (
+            <div className="mb-4 p-3 bg-blue-50/80 backdrop-blur-sm border border-blue-200/60 rounded-xl text-xs text-blue-800">
+              <strong>Cache Stats:</strong>{" "}
+              {cacheManager.current.getStats().size} entries |{" "}
+              <button
+                onClick={() => {
+                  cacheManager.current.clear();
+                  console.log("🗑️ Cache cleared manually");
+                }}
+                className="underline hover:text-blue-900"
+              >
+                Clear Cache
+              </button>
+            </div>
           )}
 
           {/* Main Content */}
