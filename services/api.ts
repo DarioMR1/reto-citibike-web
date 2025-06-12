@@ -19,6 +19,7 @@ export const CACHE_DURATION = {
   DASHBOARD: 2 * 60 * 1000, // 2 minutes
   CHARTS: 5 * 60 * 1000, // 5 minutes
   ANOMALIES: 10 * 60 * 1000, // 10 minutes
+  TRAINING_RESULTS: 60 * 60 * 1000, // 1 hour for training results
 };
 
 // Cache manager class
@@ -198,10 +199,15 @@ export const fetchAnomalyData = async (forceRefresh = false) => {
   );
 
   if (data?.success) {
-    return {
+    const scatterData = {
       normal_points: data.normal_points || [],
       anomaly_points: data.anomaly_points || [],
     };
+    
+    // Cache the scatter data separately for persistence
+    cacheTrainingResult("analysis_anomaly_scatter_data", scatterData);
+    
+    return scatterData;
   }
 
   return {
@@ -277,7 +283,7 @@ export const fetchDatasetRecords = async (
 };
 
 // Training API Functions
-export const trainUnsupervisedModel = async (): Promise<{ success: boolean; message?: string }> => {
+export const trainUnsupervisedModel = async (): Promise<{ success: boolean; message?: string; results?: any }> => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/train/unsupervised`, {
       method: "POST",
@@ -288,14 +294,25 @@ export const trainUnsupervisedModel = async (): Promise<{ success: boolean; mess
       throw new Error(data.message || "Failed to start training");
     }
 
-    return { success: true };
+    // Invalidate status cache to force refresh
+    cacheManager.invalidate("system_status");
+
+    // Cache the training result
+    const result = { 
+      success: true,
+      results: data.results,
+      message: data.message 
+    };
+    cacheTrainingResult("training_unsupervised_result", result);
+
+    return result;
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to start unsupervised model training";
     return { success: false, message };
   }
 };
 
-export const trainSupervisedModel = async (): Promise<{ success: boolean; message?: string; results?: any }> => {
+export const trainSupervisedModel = async (): Promise<{ success: boolean; message?: string; results?: any; model_type?: string; metrics?: any }> => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/train/supervised`, {
       method: "POST",
@@ -306,11 +323,20 @@ export const trainSupervisedModel = async (): Promise<{ success: boolean; messag
       throw new Error(data.message || "Failed to start supervised training");
     }
 
-    return { 
+    // Invalidate status cache to force refresh
+    cacheManager.invalidate("system_status");
+
+    // Cache the training result
+    const result = { 
       success: true, 
       results: data.results,
-      message: data.message 
+      message: data.message,
+      model_type: data.model_type,
+      metrics: data.metrics
     };
+    cacheTrainingResult("training_supervised_result", result);
+
+    return result;
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to start supervised model training";
     return { success: false, message };
@@ -320,27 +346,39 @@ export const trainSupervisedModel = async (): Promise<{ success: boolean; messag
 
 
 // Get counterfactual analysis
-export const fetchCounterfactualAnalysis = async (): Promise<any> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/counterfactual/analysis`);
-    const data = await response.json();
-    return data.success ? data : null;
-  } catch (err) {
-    console.error("Error fetching counterfactual analysis:", err);
-    return null;
+export const fetchCounterfactualAnalysis = async (forceRefresh = false): Promise<any> => {
+  const data = await fetchWithCache(
+    `${API_BASE_URL}/api/counterfactual/analysis`,
+    "counterfactual_analysis",
+    CACHE_DURATION.CHARTS,
+    forceRefresh
+  );
+
+  if (data?.success) {
+    // Cache the analysis data separately for persistence
+    cacheTrainingResult("analysis_counterfactual_data", data);
+    return data;
   }
+  
+  return null;
 };
 
 // Get anomaly analysis details
-export const fetchAnomalyAnalysis = async (): Promise<any> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/anomalies/analysis`);
-    const data = await response.json();
-    return data.success ? data : null;
-  } catch (err) {
-    console.error("Error fetching anomaly analysis:", err);
-    return null;
+export const fetchAnomalyAnalysis = async (forceRefresh = false): Promise<any> => {
+  const data = await fetchWithCache(
+    `${API_BASE_URL}/api/anomalies/analysis`,
+    "anomaly_analysis",
+    CACHE_DURATION.CHARTS,
+    forceRefresh
+  );
+
+  if (data?.success) {
+    // Cache the analysis data separately for persistence
+    cacheTrainingResult("analysis_anomaly_data", data);
+    return data;
   }
+
+  return null;
 };
 
 // Prediction API Functions
@@ -385,4 +423,17 @@ export const clearAllCache = (): void => {
 
 export const getCacheStats = (): { size: number; keys: string[] } => {
   return cacheManager.getStats();
+};
+
+// Training results cache utilities
+export const cacheTrainingResult = (key: string, result: any): void => {
+  cacheManager.set(key, result, CACHE_DURATION.TRAINING_RESULTS);
+};
+
+export const getCachedTrainingResult = (key: string): any | null => {
+  return cacheManager.get(key);
+};
+
+export const invalidateTrainingCache = (): void => {
+  cacheManager.invalidatePattern("training_");
 }; 

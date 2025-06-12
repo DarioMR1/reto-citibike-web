@@ -114,6 +114,7 @@ export interface AnomaliesProps {
   chartsLoading: boolean;
   trainingUnsupervised: boolean;
   onTrainUnsupervised: () => void;
+  onNavigateToTraining?: () => void;
 }
 
 export interface PredictionsProps {

@@ -80,6 +80,14 @@ export default function CitiBikeAnalytics() {
     sort_order: "asc",
   });
 
+  // Load saved section from localStorage after component mounts (avoids hydration mismatch)
+  useEffect(() => {
+    const savedSection = localStorage.getItem("citibike-active-section");
+    if (savedSection) {
+      setActiveSection(savedSection);
+    }
+  }, []);
+
   // API service functions
   const fetchStatus = useCallback(async (forceRefresh = false) => {
     try {
@@ -191,6 +199,19 @@ export default function CitiBikeAnalytics() {
     datasetFilters,
   ]);
 
+  // Load cached anomaly data on mount for anomalies section
+  useEffect(() => {
+    if (activeSection === "anomalies") {
+      const cachedAnomalyScatterData = apiService.getCachedTrainingResult(
+        "analysis_anomaly_scatter_data"
+      );
+      if (cachedAnomalyScatterData) {
+        setAnomaliesScatterData(cachedAnomalyScatterData);
+        console.log("📦 Loaded anomaly scatter data from cache");
+      }
+    }
+  }, [activeSection]);
+
   const trainUnsupervisedModel = async () => {
     setTrainingUnsupervised(true);
     setError("");
@@ -199,13 +220,22 @@ export default function CitiBikeAnalytics() {
       const result = await apiService.trainUnsupervisedModel();
       if (!result.success) {
         setError(result.message || "Failed to start training");
+      } else {
+        // Refresh status after successful training
+        setTimeout(() => {
+          fetchStatus(true);
+        }, 2000);
       }
     } catch {
       setError("Failed to start unsupervised model training");
     } finally {
-      // Keep the button disabled until SSE confirms training is done
-      // The Anomalies component will handle re-enabling via SSE
+      setTrainingUnsupervised(false);
     }
+  };
+
+  // Navigate to training section
+  const navigateToTraining = () => {
+    handleSectionChange("training");
   };
 
   const makePrediction = async () => {
@@ -304,6 +334,14 @@ export default function CitiBikeAnalytics() {
     setSidebarCollapsed(!sidebarCollapsed);
   };
 
+  // Custom function to handle section changes with localStorage persistence
+  const handleSectionChange = (section: string) => {
+    setActiveSection(section);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("citibike-active-section", section);
+    }
+  };
+
   const renderContent = () => {
     switch (activeSection) {
       case "dashboard":
@@ -344,10 +382,13 @@ export default function CitiBikeAnalytics() {
             chartsLoading={chartsLoading}
             trainingUnsupervised={trainingUnsupervised}
             onTrainUnsupervised={trainUnsupervisedModel}
+            onNavigateToTraining={navigateToTraining}
           />
         );
       case "training":
-        return <Training status={status} />;
+        return (
+          <Training status={status} onStatusUpdate={() => fetchStatus(true)} />
+        );
       case "integrations":
         return (
           <IntegrationsTable
@@ -385,7 +426,7 @@ export default function CitiBikeAnalytics() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100/50 flex">
       <Sidebar
         activeSection={activeSection}
-        onSectionChange={setActiveSection}
+        onSectionChange={handleSectionChange}
         isCollapsed={sidebarCollapsed}
         onToggleCollapse={handleToggleSidebar}
       />

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -13,6 +13,7 @@ import { AlertTriangle, Loader2, Shield } from "lucide-react";
 import AnomaliesScatterChart from "@/components/charts/AnomaliesScatterChart";
 import AnomaliesByHourChart from "@/components/charts/AnomaliesByHourChart";
 import type { AnomaliesProps } from "@/types";
+import * as apiService from "@/services/api";
 
 const Anomalies: React.FC<AnomaliesProps> = ({
   status,
@@ -21,7 +22,29 @@ const Anomalies: React.FC<AnomaliesProps> = ({
   chartsLoading,
   trainingUnsupervised,
   onTrainUnsupervised,
+  onNavigateToTraining, // New prop for navigation
 }) => {
+  // Load cached anomaly data on component mount
+  useEffect(() => {
+    // Only load from cache if we don't have current data and models are trained
+    if (
+      status?.unsupervised_model &&
+      !anomaliesScatterData.normal_points.length &&
+      !anomaliesScatterData.anomaly_points.length
+    ) {
+      const cachedAnomalyScatterData = apiService.getCachedTrainingResult(
+        "analysis_anomaly_scatter_data"
+      );
+      if (cachedAnomalyScatterData) {
+        console.log(
+          "📦 Loaded anomaly scatter data from cache in Anomalies component"
+        );
+        // Note: We can't directly update the parent state from here,
+        // but the parent component should handle this
+      }
+    }
+  }, [status, anomaliesScatterData]);
+
   return (
     <div className="bg-gradient-to-br from-slate-50 via-white to-slate-100/50">
       <div className="space-y-8 max-w-7xl mx-auto px-4 py-8">
@@ -85,7 +108,7 @@ const Anomalies: React.FC<AnomaliesProps> = ({
                   distribution and predict maintenance needs.
                 </p>
                 <Button
-                  onClick={onTrainUnsupervised}
+                  onClick={onNavigateToTraining || onTrainUnsupervised}
                   disabled={trainingUnsupervised}
                   className="h-16 px-12 bg-gradient-to-r from-blue-800 via-slate-900 to-blue-800 hover:from-blue-900 hover:via-slate-800 hover:to-blue-900 text-white font-bold text-xl shadow-2xl transition-all duration-300 transform hover:scale-[1.02] rounded-2xl backdrop-blur-sm"
                 >
@@ -97,7 +120,9 @@ const Anomalies: React.FC<AnomaliesProps> = ({
                   ) : (
                     <>
                       <Shield className="w-6 h-6 mr-3" />
-                      Train Anomaly Detection
+                      {onNavigateToTraining
+                        ? "Go to Training"
+                        : "Train Anomaly Detection"}
                     </>
                   )}
                 </Button>

@@ -25,10 +25,10 @@ const Sidebar = ({
 }: SidebarProps) => {
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "predictions", label: "Predictions", icon: Activity },
-    { id: "anomalies", label: "Anomalies", icon: Shield },
     { id: "integrations", label: "Dataset Explorer", icon: Database },
     { id: "training", label: "Training", icon: Package },
+    { id: "anomalies", label: "Anomalies", icon: Shield },
+    { id: "predictions", label: "Predictions", icon: Activity },
   ];
 
   return (

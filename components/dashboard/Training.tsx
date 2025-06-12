@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,6 +29,7 @@ import AnomalyAnalysisChart from "@/components/charts/AnomalyAnalysisChart";
 
 interface TrainingProps {
   status: SystemStatus | null;
+  onStatusUpdate?: () => void; // Callback to refresh status
 }
 
 interface TrainingResult {
@@ -96,7 +97,7 @@ interface ScatterData {
   anomaly_points: Array<{ x: number; y: number; type: string }>;
 }
 
-const Training: React.FC<TrainingProps> = ({ status }) => {
+const Training: React.FC<TrainingProps> = ({ status, onStatusUpdate }) => {
   const [supervisedTraining, setSupervisedTraining] = useState(false);
   const [unsupervisedTraining, setUnsupervisedTraining] = useState(false);
   const [supervisedResult, setSupervisedResult] =
@@ -119,6 +120,56 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
     "training" | "supervised" | "unsupervised"
   >("training");
 
+  // Load cached training results on component mount
+  useEffect(() => {
+    const cachedSupervisedResult = apiService.getCachedTrainingResult(
+      "training_supervised_result"
+    );
+    const cachedUnsupervisedResult = apiService.getCachedTrainingResult(
+      "training_unsupervised_result"
+    );
+
+    // Load cached analysis data
+    const cachedCounterfactualData = apiService.getCachedTrainingResult(
+      "analysis_counterfactual_data"
+    );
+    const cachedAnomalyData = apiService.getCachedTrainingResult(
+      "analysis_anomaly_data"
+    );
+    const cachedAnomalyScatterData = apiService.getCachedTrainingResult(
+      "analysis_anomaly_scatter_data"
+    );
+
+    if (cachedSupervisedResult) {
+      setSupervisedResult(cachedSupervisedResult);
+      console.log("📦 Loaded supervised training result from cache");
+    }
+
+    if (cachedUnsupervisedResult) {
+      setUnsupervisedResult(cachedUnsupervisedResult);
+      console.log("📦 Loaded unsupervised training result from cache");
+    }
+
+    // Load counterfactual data if available
+    if (cachedCounterfactualData) {
+      setCounterfactualData(cachedCounterfactualData);
+      console.log("📦 Loaded counterfactual analysis data from cache");
+    } else if (cachedSupervisedResult?.success) {
+      // If we have a trained supervised model but no cached analysis, fetch it
+      fetchCounterfactualAnalysis();
+    }
+
+    // Load anomaly analysis data if available
+    if (cachedAnomalyData && cachedAnomalyScatterData) {
+      setAnomalyAnalysisData(cachedAnomalyData);
+      setAnomalyScatterData(cachedAnomalyScatterData);
+      console.log("📦 Loaded anomaly analysis data from cache");
+    } else if (cachedUnsupervisedResult?.success) {
+      // If we have a trained unsupervised model but no cached analysis, fetch it
+      Promise.all([fetchAnomalyAnalysis(), fetchAnomalyScatterData()]);
+    }
+  }, []); // Dependencies are handled by each function individually
+
   const handleSupervisedTraining = async () => {
     setSupervisedTraining(true);
     setSupervisedResult(null);
@@ -131,6 +182,10 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
       if (result.success) {
         // Fetch additional data for charts
         await fetchCounterfactualAnalysis();
+        // Update parent status
+        if (onStatusUpdate) {
+          setTimeout(() => onStatusUpdate(), 1000);
+        }
         // Auto-switch to supervised analysis tab
         setTimeout(() => setActiveTab("supervised"), 1000);
       } else {
@@ -160,6 +215,10 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
         setChartsLoading(true);
         await Promise.all([fetchAnomalyAnalysis(), fetchAnomalyScatterData()]);
         setChartsLoading(false);
+        // Update parent status
+        if (onStatusUpdate) {
+          setTimeout(() => onStatusUpdate(), 1000);
+        }
         // Auto-switch to unsupervised analysis tab
         setTimeout(() => setActiveTab("unsupervised"), 1000);
       } else {
@@ -190,13 +249,14 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
         });
       }, 500);
 
-      const data = await apiService.fetchCounterfactualAnalysis();
+      const data = await apiService.fetchCounterfactualAnalysis(false);
 
       clearInterval(progressInterval);
       setCounterfactualProgress(100);
 
       if (data) {
         setCounterfactualData(data);
+        console.log("✅ Counterfactual analysis loaded successfully");
       }
     } catch (err) {
       console.error("Error fetching counterfactual analysis:", err);
@@ -211,9 +271,10 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
 
   const fetchAnomalyAnalysis = async () => {
     try {
-      const data = await apiService.fetchAnomalyAnalysis();
+      const data = await apiService.fetchAnomalyAnalysis(false);
       if (data) {
         setAnomalyAnalysisData(data);
+        console.log("✅ Anomaly analysis loaded successfully");
       }
     } catch (err) {
       console.error("Error fetching anomaly analysis:", err);
@@ -222,9 +283,10 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
 
   const fetchAnomalyScatterData = async () => {
     try {
-      const data = await apiService.fetchAnomalyData();
+      const data = await apiService.fetchAnomalyData(false);
       if (data) {
         setAnomalyScatterData(data);
+        console.log("✅ Anomaly scatter data loaded successfully");
       }
     } catch (err) {
       console.error("Error fetching anomaly scatter data:", err);
