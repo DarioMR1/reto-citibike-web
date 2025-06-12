@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ import {
   Users,
 } from "lucide-react";
 import type { IntegrationsTableProps, DatasetFilters } from "@/types";
+import * as apiService from "@/services/api";
 
 const IntegrationsTable = ({
   records,
@@ -63,6 +64,24 @@ const IntegrationsTable = ({
     min_revenue: filters.min_revenue || "",
     max_revenue: filters.max_revenue || "",
   });
+
+  // Load filter preferences from cache on component mount
+  useEffect(() => {
+    const cachedDatasetState = apiService.getCachedDatasetState();
+    if (cachedDatasetState.hasCache && cachedDatasetState.lastFilters) {
+      const cached = cachedDatasetState.lastFilters;
+      setLocalFilters({
+        station_filter: cached.station_filter || "",
+        member_type_filter: cached.member_type_filter || "all",
+        month_filter: cached.month_filter
+          ? cached.month_filter.toString()
+          : "all",
+        min_revenue: cached.min_revenue ? cached.min_revenue.toString() : "",
+        max_revenue: cached.max_revenue ? cached.max_revenue.toString() : "",
+      });
+      console.log("📦 Loaded dataset filters from cache");
+    }
+  }, []);
 
   const handleSort = (column: string) => {
     const newOrder =

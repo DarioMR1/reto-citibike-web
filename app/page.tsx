@@ -212,6 +212,39 @@ export default function CitiBikeAnalytics() {
     }
   }, [activeSection]);
 
+  // Load cached dataset data on mount for integrations section
+  useEffect(() => {
+    if (activeSection === "integrations") {
+      const cachedDatasetState = apiService.getCachedDatasetState();
+      if (cachedDatasetState.hasCache) {
+        console.log("📦 Loading dataset data from cache");
+
+        // Set summary if available
+        if (cachedDatasetState.summary) {
+          setDatasetSummary(cachedDatasetState.summary);
+        }
+
+        // Set pagination info if available
+        if (cachedDatasetState.totalRecords > 0) {
+          setDatasetTotalRecords(cachedDatasetState.totalRecords);
+          setDatasetTotalPages(cachedDatasetState.totalPages);
+        }
+
+        // Set filters if available
+        if (cachedDatasetState.lastFilters) {
+          setDatasetFilters(cachedDatasetState.lastFilters);
+        }
+
+        // Set page if available
+        if (cachedDatasetState.lastPage > 0) {
+          setDatasetPage(cachedDatasetState.lastPage);
+        }
+
+        console.log("📦 Dataset cache loaded successfully");
+      }
+    }
+  }, [activeSection]);
+
   const trainUnsupervisedModel = async () => {
     setTrainingUnsupervised(true);
     setError("");
@@ -326,7 +359,8 @@ export default function CitiBikeAnalytics() {
   };
 
   const handleDatasetRefresh = () => {
-    apiService.invalidateCachePattern("dataset_");
+    console.log("🔄 Refreshing dataset data...");
+    apiService.invalidateDatasetCache();
     fetchDatasetRecords(datasetPage, datasetFilters, true);
   };
 

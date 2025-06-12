@@ -20,6 +20,8 @@ export const CACHE_DURATION = {
   CHARTS: 5 * 60 * 1000, // 5 minutes
   ANOMALIES: 10 * 60 * 1000, // 10 minutes
   TRAINING_RESULTS: 60 * 60 * 1000, // 1 hour for training results
+  DATASET: 15 * 60 * 1000, // 15 minutes for dataset records
+  DATASET_SUMMARY: 30 * 60 * 1000, // 30 minutes for dataset summary
 };
 
 // Cache manager class
@@ -262,17 +264,32 @@ export const fetchDatasetRecords = async (
       data = await response.json();
 
       // Cache the response
-      cacheManager.set(cacheKey, data, CACHE_DURATION.DASHBOARD);
+      cacheManager.set(cacheKey, data, CACHE_DURATION.DATASET);
     }
 
     if (data?.success) {
-      return {
+      const result = {
         records: data.records,
         totalPages: data.total_pages,
         totalRecords: data.total_records,
         summary: data.summary,
         currentPage: data.current_page,
       };
+
+      // Cache additional dataset information for persistence
+      if (data.summary) {
+        cacheDatasetData("dataset_summary", data.summary);
+      }
+      
+      // Cache last used filters and pagination info
+      cacheDatasetData("dataset_last_filters", filters);
+      cacheDatasetData("dataset_last_page", page);
+      cacheDatasetData("dataset_total_records", data.total_records);
+      cacheDatasetData("dataset_total_pages", data.total_pages);
+
+      console.log(`📊 Dataset data cached: ${data.records.length} records, page ${page}`);
+
+      return result;
     } else {
       throw new Error("Failed to fetch dataset records");
     }
@@ -436,4 +453,37 @@ export const getCachedTrainingResult = (key: string): any | null => {
 
 export const invalidateTrainingCache = (): void => {
   cacheManager.invalidatePattern("training_");
+};
+
+// Dataset cache utilities
+export const cacheDatasetData = (key: string, data: any): void => {
+  cacheManager.set(key, data, CACHE_DURATION.DATASET_SUMMARY);
+};
+
+export const getCachedDatasetData = (key: string): any | null => {
+  return cacheManager.get(key);
+};
+
+export const invalidateDatasetCache = (): void => {
+  cacheManager.invalidatePattern("dataset_");
+  cacheManager.invalidatePattern("dataset_summary");
+  cacheManager.invalidatePattern("dataset_last_");
+};
+
+// Get cached dataset state for component initialization
+export const getCachedDatasetState = () => {
+  const summary = getCachedDatasetData("dataset_summary");
+  const lastFilters = getCachedDatasetData("dataset_last_filters");
+  const lastPage = getCachedDatasetData("dataset_last_page");
+  const totalRecords = getCachedDatasetData("dataset_total_records");
+  const totalPages = getCachedDatasetData("dataset_total_pages");
+
+  return {
+    summary,
+    lastFilters,
+    lastPage: lastPage || 1,
+    totalRecords: totalRecords || 0,
+    totalPages: totalPages || 0,
+    hasCache: !!(summary || lastFilters)
+  };
 }; 
