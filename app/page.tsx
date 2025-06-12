@@ -35,6 +35,7 @@ export default function CitiBikeAnalytics() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeSection, setActiveSection] = useState("dashboard");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Chart data states
   const [revenueByHourData, setRevenueByHourData] = useState<ChartData[]>([]);
@@ -96,9 +97,9 @@ export default function CitiBikeAnalytics() {
   const fetchDashboard = useCallback(async (forceRefresh = false) => {
     setLoading(true);
     try {
-      const kpisData = await apiService.fetchDashboard(forceRefresh);
-      if (kpisData) {
-        setKpis(kpisData);
+      const kipsData = await apiService.fetchDashboard(forceRefresh);
+      if (kipsData) {
+        setKpis(kipsData);
       } else {
         setError("Failed to fetch dashboard data");
       }
@@ -299,6 +300,10 @@ export default function CitiBikeAnalytics() {
     fetchDatasetRecords(datasetPage, datasetFilters, true);
   };
 
+  const handleToggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
+
   const renderContent = () => {
     switch (activeSection) {
       case "dashboard":
@@ -381,9 +386,15 @@ export default function CitiBikeAnalytics() {
       <Sidebar
         activeSection={activeSection}
         onSectionChange={setActiveSection}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={handleToggleSidebar}
       />
 
-      <div className="flex-1 ml-64">
+      <div
+        className={`flex-1 transition-all duration-300 ${
+          sidebarCollapsed ? "ml-16" : "ml-64"
+        }`}
+      >
         <div className="p-6">
           {/* Error Alert */}
           {error && (

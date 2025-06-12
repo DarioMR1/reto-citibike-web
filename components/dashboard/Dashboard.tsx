@@ -23,7 +23,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   onRefreshData,
 }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100/50">
+    <div className="bg-gradient-to-br from-slate-50 via-white to-slate-100/50">
       <div className="space-y-8 max-w-7xl mx-auto px-4 py-8">
         {/* Page Title */}
         <div className="flex items-center justify-between mb-8">

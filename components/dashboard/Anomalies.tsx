@@ -23,7 +23,7 @@ const Anomalies: React.FC<AnomaliesProps> = ({
   onTrainUnsupervised,
 }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100/50">
+    <div className="bg-gradient-to-br from-slate-50 via-white to-slate-100/50">
       <div className="space-y-8 max-w-7xl mx-auto px-4 py-8">
         {/* Header Section */}
         <div className="text-center mb-12">
