@@ -18,6 +18,8 @@ import {
   XCircle,
   AlertTriangle,
   Loader2,
+  BarChart3,
+  Activity,
 } from "lucide-react";
 import type { SystemStatus } from "@/types";
 import * as apiService from "@/services/api";
@@ -53,6 +55,9 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
   const [chartsLoading, setChartsLoading] = useState(false);
   const [counterfactualLoading, setCounterfactualLoading] = useState(false);
   const [counterfactualProgress, setCounterfactualProgress] = useState(0);
+  const [activeTab, setActiveTab] = useState<
+    "training" | "supervised" | "unsupervised"
+  >("training");
 
   const handleSupervisedTraining = async () => {
     setSupervisedTraining(true);
@@ -66,6 +71,8 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
       if (result.success) {
         // Fetch additional data for charts
         await fetchCounterfactualAnalysis();
+        // Auto-switch to supervised analysis tab
+        setTimeout(() => setActiveTab("supervised"), 1000);
       } else {
         setError(result.message || "Failed to train supervised model");
       }
@@ -93,6 +100,8 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
         setChartsLoading(true);
         await Promise.all([fetchAnomalyAnalysis(), fetchAnomalyScatterData()]);
         setChartsLoading(false);
+        // Auto-switch to unsupervised analysis tab
+        setTimeout(() => setActiveTab("unsupervised"), 1000);
       } else {
         setError(result.message || "Failed to train unsupervised model");
       }
@@ -292,6 +301,35 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
     );
   };
 
+  const TabButton = ({
+    id,
+    label,
+    icon: Icon,
+    isActive,
+    onClick,
+    hasData = false,
+  }: {
+    id: string;
+    label: string;
+    icon: any;
+    isActive: boolean;
+    onClick: () => void;
+    hasData?: boolean;
+  }) => (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-3 px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
+        isActive
+          ? "bg-blue-600 text-white shadow-lg"
+          : "bg-white/80 text-slate-700 hover:bg-blue-50 border border-slate-200/60"
+      }`}
+    >
+      <Icon className="w-5 h-5" />
+      <span>{label}</span>
+      {hasData && <div className="w-2 h-2 bg-green-500 rounded-full"></div>}
+    </button>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100/50">
       <div className="space-y-8 max-w-7xl mx-auto px-4 py-8">
@@ -305,6 +343,33 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
           </p>
         </div>
 
+        {/* Navigation Tabs */}
+        <div className="flex flex-wrap gap-4 mb-8">
+          <TabButton
+            id="training"
+            label="Training Controls"
+            icon={Brain}
+            isActive={activeTab === "training"}
+            onClick={() => setActiveTab("training")}
+          />
+          <TabButton
+            id="supervised"
+            label="Supervised Analysis"
+            icon={BarChart3}
+            isActive={activeTab === "supervised"}
+            onClick={() => setActiveTab("supervised")}
+            hasData={!!supervisedResult?.success && !!counterfactualData}
+          />
+          <TabButton
+            id="unsupervised"
+            label="Unsupervised Analysis"
+            icon={Activity}
+            isActive={activeTab === "unsupervised"}
+            onClick={() => setActiveTab("unsupervised")}
+            hasData={!!unsupervisedResult?.success && !!anomalyAnalysisData}
+          />
+        </div>
+
         {/* Error Alert */}
         {error && (
           <Alert className="mb-6 bg-red-50/80 backdrop-blur-sm border-red-200/60 rounded-2xl shadow-lg">
@@ -315,154 +380,180 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
           </Alert>
         )}
 
-        {/* System Status */}
-        {status && (
-          <Card className="bg-white/80 backdrop-blur-sm border-2 border-slate-200/60 rounded-2xl shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-xl">System Status</CardTitle>
-              <CardDescription>Current state of trained models</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3">
-                  <Brain className="h-5 w-5 text-blue-600" />
-                  <span className="font-medium">Supervised Model:</span>
-                  <Badge
-                    variant={status.supervised_model ? "default" : "secondary"}
-                  >
-                    {status.supervised_model ? "Trained" : "Not Trained"}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Cpu className="h-5 w-5 text-purple-600" />
-                  <span className="font-medium">Unsupervised Model:</span>
-                  <Badge
-                    variant={
-                      status.unsupervised_model ? "default" : "secondary"
-                    }
-                  >
-                    {status.unsupervised_model ? "Trained" : "Not Trained"}
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Training Controls */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Supervised Model Training */}
-          <Card className="bg-white/80 backdrop-blur-sm border-2 border-slate-200/60 rounded-2xl shadow-lg">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <Brain className="h-6 w-6 text-blue-600" />
-                <div>
-                  <CardTitle className="text-xl">Supervised Model</CardTitle>
-                  <CardDescription>
-                    Train Random Forest and Gradient Boosting models for revenue
-                    prediction
+        {/* Tab Content */}
+        {activeTab === "training" && (
+          <div className="space-y-8">
+            {/* System Status */}
+            {status && (
+              <Card className="bg-white/90 backdrop-blur-sm border-2 border-slate-200/60 rounded-2xl shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-xl text-slate-800">
+                    System Status
+                  </CardTitle>
+                  <CardDescription className="text-slate-600">
+                    Current state of trained models
                   </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="text-sm text-slate-600">
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>Predicts revenue based on trip characteristics</li>
-                    <li>Uses Random Forest and Gradient Boosting algorithms</li>
-                    <li>Selects best performing model automatically</li>
-                    <li>Automatically runs counterfactual revenue analysis</li>
-                  </ul>
-                </div>
-
-                {supervisedTraining && (
-                  <div className="bg-blue-50/80 backdrop-blur-sm border border-blue-200/60 rounded-xl p-3">
-                    <div className="text-sm text-blue-800">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span className="font-medium">
-                          Training in progress...
-                        </span>
-                      </div>
-                      <div className="text-xs text-blue-600">
-                        After model training completes, counterfactual analysis
-                        will run automatically to calculate revenue impact from
-                        bike shortages.
-                      </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3">
+                      <Brain className="h-5 w-5 text-blue-600" />
+                      <span className="font-medium text-slate-700">
+                        Supervised Model:
+                      </span>
+                      <Badge
+                        variant={
+                          status.supervised_model ? "default" : "secondary"
+                        }
+                      >
+                        {status.supervised_model ? "Trained" : "Not Trained"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Cpu className="h-5 w-5 text-purple-600" />
+                      <span className="font-medium text-slate-700">
+                        Unsupervised Model:
+                      </span>
+                      <Badge
+                        variant={
+                          status.unsupervised_model ? "default" : "secondary"
+                        }
+                      >
+                        {status.unsupervised_model ? "Trained" : "Not Trained"}
+                      </Badge>
                     </div>
                   </div>
-                )}
-                <Button
-                  onClick={handleSupervisedTraining}
-                  disabled={supervisedTraining || status?.is_training}
-                  className="w-full bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-600/20 text-white font-medium rounded-xl py-3 transition-all duration-200"
-                >
-                  {supervisedTraining ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Training Model...
-                    </>
-                  ) : (
-                    <>
-                      <Brain className="w-4 h-4 mr-2" />
-                      Train Supervised Model
-                    </>
-                  )}
-                </Button>
-              </div>
-              {renderTrainingResult(supervisedResult, "supervised")}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            )}
 
-          {/* Unsupervised Model Training */}
-          <Card className="bg-white/80 backdrop-blur-sm border-2 border-slate-200/60 rounded-2xl shadow-lg">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <Cpu className="h-6 w-6 text-purple-600" />
-                <div>
-                  <CardTitle className="text-xl">Unsupervised Model</CardTitle>
-                  <CardDescription>
-                    Train Isolation Forest and LOF models for anomaly detection
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="text-sm text-slate-600">
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>Detects unusual patterns in trip data</li>
-                    <li>Uses Isolation Forest and Local Outlier Factor</li>
-                    <li>Identifies consensus anomalies across both methods</li>
-                    <li>Provides detailed anomaly analysis</li>
-                  </ul>
-                </div>
-                <Button
-                  onClick={handleUnsupervisedTraining}
-                  disabled={unsupervisedTraining || status?.is_training}
-                  className="w-full bg-purple-600 hover:bg-purple-700 focus:ring-4 focus:ring-purple-600/20 text-white font-medium rounded-xl py-3 transition-all duration-200"
-                >
-                  {unsupervisedTraining ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Training Model...
-                    </>
-                  ) : (
-                    <>
-                      <Cpu className="w-4 h-4 mr-2" />
-                      Train Unsupervised Model
-                    </>
-                  )}
-                </Button>
-              </div>
-              {renderTrainingResult(unsupervisedResult, "unsupervised")}
-            </CardContent>
-          </Card>
-        </div>
+            {/* Training Controls */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Supervised Model Training */}
+              <Card className="bg-white/90 backdrop-blur-sm border-2 border-slate-200/60 rounded-2xl shadow-lg">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <Brain className="h-6 w-6 text-blue-600" />
+                    <div>
+                      <CardTitle className="text-xl text-slate-800">
+                        Supervised Model
+                      </CardTitle>
+                      <CardDescription className="text-slate-600">
+                        Train Random Forest and Gradient Boosting models for
+                        revenue prediction
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="text-sm text-slate-600">
+                      <ul className="list-disc list-inside space-y-1">
+                        <li>Predicts revenue based on trip characteristics</li>
+                        <li>
+                          Uses Random Forest and Gradient Boosting algorithms
+                        </li>
+                        <li>Selects best performing model automatically</li>
+                        <li>
+                          Automatically runs counterfactual revenue analysis
+                        </li>
+                      </ul>
+                    </div>
 
-        {/* Supervised Model Charts */}
-        {supervisedResult?.success && (
+                    {supervisedTraining && (
+                      <div className="bg-blue-50/80 backdrop-blur-sm border border-blue-200/60 rounded-xl p-3">
+                        <div className="text-sm text-blue-800">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span className="font-medium">
+                              Training in progress...
+                            </span>
+                          </div>
+                          <div className="text-xs text-blue-600">
+                            After model training completes, counterfactual
+                            analysis will run automatically to calculate revenue
+                            impact from bike shortages.
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <Button
+                      onClick={handleSupervisedTraining}
+                      disabled={supervisedTraining || status?.is_training}
+                      className="w-full bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-600/20 text-white font-medium rounded-xl py-3 transition-all duration-200"
+                    >
+                      {supervisedTraining ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Training Model...
+                        </>
+                      ) : (
+                        <>
+                          <Brain className="w-4 h-4 mr-2" />
+                          Train Supervised Model
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  {renderTrainingResult(supervisedResult, "supervised")}
+                </CardContent>
+              </Card>
+
+              {/* Unsupervised Model Training */}
+              <Card className="bg-white/90 backdrop-blur-sm border-2 border-slate-200/60 rounded-2xl shadow-lg">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <Cpu className="h-6 w-6 text-purple-600" />
+                    <div>
+                      <CardTitle className="text-xl text-slate-800">
+                        Unsupervised Model
+                      </CardTitle>
+                      <CardDescription className="text-slate-600">
+                        Train Isolation Forest and LOF models for anomaly
+                        detection
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="text-sm text-slate-600">
+                      <ul className="list-disc list-inside space-y-1">
+                        <li>Detects unusual patterns in trip data</li>
+                        <li>Uses Isolation Forest and Local Outlier Factor</li>
+                        <li>
+                          Identifies consensus anomalies across both methods
+                        </li>
+                        <li>Provides detailed anomaly analysis</li>
+                      </ul>
+                    </div>
+                    <Button
+                      onClick={handleUnsupervisedTraining}
+                      disabled={unsupervisedTraining || status?.is_training}
+                      className="w-full bg-purple-600 hover:bg-purple-700 focus:ring-4 focus:ring-purple-600/20 text-white font-medium rounded-xl py-3 transition-all duration-200"
+                    >
+                      {unsupervisedTraining ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Training Model...
+                        </>
+                      ) : (
+                        <>
+                          <Cpu className="w-4 h-4 mr-2" />
+                          Train Unsupervised Model
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  {renderTrainingResult(unsupervisedResult, "unsupervised")}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Supervised Model Analysis Tab */}
+        {activeTab === "supervised" && (
           <div className="space-y-8">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-slate-800">
@@ -554,11 +645,37 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
                   </CardContent>
                 </Card>
               )}
+
+            {/* No Model Trained State */}
+            {!supervisedResult?.success && (
+              <Card className="bg-blue-50/80 backdrop-blur-sm border-2 border-blue-200/60 rounded-2xl shadow-lg">
+                <CardContent className="p-8 text-center">
+                  <div className="space-y-4">
+                    <BarChart3 className="w-12 h-12 text-blue-400 mx-auto" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-700">
+                        No Supervised Model Trained
+                      </h3>
+                      <p className="text-slate-600 mt-2">
+                        Train a supervised model first to see revenue impact
+                        analysis and counterfactual scenarios.
+                      </p>
+                      <Button
+                        onClick={() => setActiveTab("training")}
+                        className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        Go to Training
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
 
-        {/* Unsupervised Model Charts */}
-        {unsupervisedResult?.success && (
+        {/* Unsupervised Model Analysis Tab */}
+        {activeTab === "unsupervised" && (
           <div className="space-y-8">
             <h2 className="text-2xl font-bold text-slate-800">
               Unsupervised Model Analysis
@@ -600,6 +717,32 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
                         Unsupervised model is trained. Anomaly analysis will
                         appear here after training completes.
                       </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* No Model Trained State */}
+            {!unsupervisedResult?.success && (
+              <Card className="bg-purple-50/80 backdrop-blur-sm border-2 border-purple-200/60 rounded-2xl shadow-lg">
+                <CardContent className="p-8 text-center">
+                  <div className="space-y-4">
+                    <Activity className="w-12 h-12 text-purple-400 mx-auto" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-700">
+                        No Unsupervised Model Trained
+                      </h3>
+                      <p className="text-slate-600 mt-2">
+                        Train an unsupervised model first to see anomaly
+                        detection analysis and pattern insights.
+                      </p>
+                      <Button
+                        onClick={() => setActiveTab("training")}
+                        className="mt-4 bg-purple-600 hover:bg-purple-700 text-white"
+                      >
+                        Go to Training
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
