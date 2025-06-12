@@ -4,42 +4,12 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import KPICards from "@/components/dashboard/KPICards";
-import IntegrationsTable from "@/components/dashboard/IntegrationsTable";
 import RevenueByHourChart from "@/components/charts/RevenueByHourChart";
 import StationBalanceChart from "@/components/charts/StationBalanceChart";
 import UserTypeDistributionChart from "@/components/charts/UserTypeDistributionChart";
 import AnomaliesByHourChart from "@/components/charts/AnomaliesByHourChart";
 import WeatherImpactChart from "@/components/charts/WeatherImpactChart";
-
-interface SystemStatus {
-  supervised_model: boolean;
-  unsupervised_model: boolean;
-  models_loaded: boolean;
-  training_status: string;
-}
-
-interface KPIs {
-  total_viajes: number;
-  ingresos_totales: number;
-  ingreso_promedio: number;
-  estaciones_activas: number;
-  viajes_con_ingresos: number;
-  anomalias_detectadas?: number;
-  porcentaje_anomalias?: number;
-}
-
-interface DashboardProps {
-  kpis: KPIs | null;
-  status: SystemStatus | null;
-  loading: boolean;
-  chartsLoading: boolean;
-  revenueByHourData: any[];
-  stationBalanceData: any[];
-  userTypeData: any[];
-  anomaliesData: any[];
-  weatherImpactData: any[];
-  onRefreshData: () => void;
-}
+import type { DashboardProps } from "@/types";
 
 const Dashboard: React.FC<DashboardProps> = ({
   kpis,
@@ -117,12 +87,6 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Anomalies Chart */}
         <AnomaliesByHourChart data={anomaliesData} loading={chartsLoading} />
-
-        {/* Integrations Table */}
-        <IntegrationsTable
-          modelStatus={status || undefined}
-          loading={loading}
-        />
       </div>
     </div>
   );

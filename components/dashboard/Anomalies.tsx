@@ -12,25 +12,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Loader2, Shield } from "lucide-react";
 import AnomaliesScatterChart from "@/components/charts/AnomaliesScatterChart";
 import AnomaliesByHourChart from "@/components/charts/AnomaliesByHourChart";
-
-interface SystemStatus {
-  supervised_model: boolean;
-  unsupervised_model: boolean;
-  models_loaded: boolean;
-  training_status: string;
-}
-
-interface AnomaliesProps {
-  status: SystemStatus | null;
-  anomaliesData: any[];
-  anomaliesScatterData: {
-    normal_points: any[];
-    anomaly_points: any[];
-  };
-  chartsLoading: boolean;
-  trainingUnsupervised: boolean;
-  onTrainUnsupervised: () => void;
-}
+import type { AnomaliesProps } from "@/types";
 
 const Anomalies: React.FC<AnomaliesProps> = ({
   status,

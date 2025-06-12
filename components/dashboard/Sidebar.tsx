@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Home, Activity, Shield, Package, ChevronLeft } from "lucide-react";
+import {
+  Home,
+  Activity,
+  Shield,
+  Package,
+  Database,
+  ChevronLeft,
+} from "lucide-react";
 
 interface SidebarProps {
   activeSection: string;
@@ -15,6 +22,7 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
     { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "predictions", label: "Predictions", icon: Activity },
     { id: "anomalies", label: "Anomalies", icon: Shield },
+    { id: "integrations", label: "Dataset Explorer", icon: Database },
     { id: "training", label: "Training", icon: Package },
   ];
 

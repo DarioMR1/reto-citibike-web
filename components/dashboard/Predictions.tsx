@@ -42,44 +42,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-interface SystemStatus {
-  supervised_model: boolean;
-  unsupervised_model: boolean;
-  models_loaded: boolean;
-  training_status: string;
-}
-
-interface PredictionRequest {
-  station_id: string;
-  hour: number;
-  is_weekend: boolean;
-  month: number;
-  temperature: number;
-  humidity: number;
-  bike_type: number;
-  duration: number;
-  day_name: string;
-}
-
-interface PredictionResult {
-  prediction: number;
-  theoretical_revenue: number;
-  model_difference: number;
-}
-
-interface PredictionsProps {
-  status: SystemStatus | null;
-  predictionForm: PredictionRequest;
-  predictionResult: PredictionResult | null;
-  predicting: boolean;
-  onInputChange: (
-    field: keyof PredictionRequest
-  ) => (e: ChangeEvent<HTMLInputElement>) => void;
-  onSelectChange: (field: keyof PredictionRequest) => (value: string) => void;
-  onCheckboxChange: (checked: boolean) => void;
-  onMakePrediction: () => void;
-}
+import type { PredictionsProps, PredictionRequest } from "@/types";
 
 const Predictions: React.FC<PredictionsProps> = ({
   status,
