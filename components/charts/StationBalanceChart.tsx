@@ -15,8 +15,15 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, MapPin } from "lucide-react";
 
+interface StationData {
+  station_id: string;
+  balance: number;
+  departures: number;
+  arrivals: number;
+}
+
 interface StationBalanceChartProps {
-  data?: any[];
+  data?: StationData[];
   loading?: boolean;
 }
 
@@ -24,16 +31,16 @@ const StationBalanceChart = ({
   data,
   loading = false,
 }: StationBalanceChartProps) => {
-  const formatTooltip = (value: any, name: any) => {
+  const formatTooltip = (value: number | string, name: string) => {
     if (name === "balance") {
-      const label = value > 0 ? "Excess" : "Deficit";
-      return [`${Math.abs(value)} bikes`, label];
+      const label = Number(value) > 0 ? "Excess" : "Deficit";
+      return [`${Math.abs(Number(value))} bikes`, label];
     }
     if (name === "departures") {
-      return [value.toLocaleString(), "Departures"];
+      return [Number(value).toLocaleString(), "Departures"];
     }
     if (name === "arrivals") {
-      return [value.toLocaleString(), "Arrivals"];
+      return [Number(value).toLocaleString(), "Arrivals"];
     }
     return [value, name];
   };

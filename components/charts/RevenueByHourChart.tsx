@@ -9,14 +9,19 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, DollarSign } from "lucide-react";
 
+interface RevenueDataPoint {
+  hour: number;
+  total_revenue: number;
+  avg_revenue: number;
+  trip_count: number;
+}
+
 interface RevenueByHourChartProps {
-  data?: any[];
+  data?: RevenueDataPoint[];
   loading?: boolean;
 }
 
@@ -24,15 +29,15 @@ const RevenueByHourChart = ({
   data,
   loading = false,
 }: RevenueByHourChartProps) => {
-  const formatTooltip = (value: any, name: any) => {
+  const formatTooltip = (value: number | string, name: string) => {
     if (name === "total_revenue") {
-      return [`$${parseFloat(value).toFixed(2)}`, "Total Revenue"];
+      return [`$${parseFloat(String(value)).toFixed(2)}`, "Total Revenue"];
     }
     if (name === "avg_revenue") {
-      return [`$${parseFloat(value).toFixed(2)}`, "Avg Revenue"];
+      return [`$${parseFloat(String(value)).toFixed(2)}`, "Avg Revenue"];
     }
     if (name === "trip_count") {
-      return [value.toLocaleString(), "Trip Count"];
+      return [Number(value).toLocaleString(), "Trip Count"];
     }
     return [value, name];
   };

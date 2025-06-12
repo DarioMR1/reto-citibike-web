@@ -20,6 +20,15 @@ import type {
 } from "@/types";
 import * as apiService from "@/services/api";
 
+interface ChartData {
+  [key: string]: string | number;
+}
+
+interface AnomaliesScatterData {
+  normal_points: Array<{ x: number; y: number; type: string }>;
+  anomaly_points: Array<{ x: number; y: number; type: string }>;
+}
+
 export default function CitiBikeAnalytics() {
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [kpis, setKpis] = useState<KPIs | null>(null);
@@ -28,15 +37,13 @@ export default function CitiBikeAnalytics() {
   const [activeSection, setActiveSection] = useState("dashboard");
 
   // Chart data states
-  const [revenueByHourData, setRevenueByHourData] = useState<any[]>([]);
-  const [stationBalanceData, setStationBalanceData] = useState<any[]>([]);
-  const [userTypeData, setUserTypeData] = useState<any[]>([]);
-  const [anomaliesData, setAnomaliesData] = useState<any[]>([]);
-  const [weatherImpactData, setWeatherImpactData] = useState<any[]>([]);
-  const [anomaliesScatterData, setAnomaliesScatterData] = useState<{
-    normal_points: any[];
-    anomaly_points: any[];
-  }>({ normal_points: [], anomaly_points: [] });
+  const [revenueByHourData, setRevenueByHourData] = useState<ChartData[]>([]);
+  const [stationBalanceData, setStationBalanceData] = useState<ChartData[]>([]);
+  const [userTypeData, setUserTypeData] = useState<ChartData[]>([]);
+  const [anomaliesData, setAnomaliesData] = useState<ChartData[]>([]);
+  const [weatherImpactData, setWeatherImpactData] = useState<ChartData[]>([]);
+  const [anomaliesScatterData, setAnomaliesScatterData] =
+    useState<AnomaliesScatterData>({ normal_points: [], anomaly_points: [] });
   const [chartsLoading, setChartsLoading] = useState(false);
 
   // Unsupervised training state (for anomalies)
@@ -81,7 +88,7 @@ export default function CitiBikeAnalytics() {
       } else {
         setError("Failed to fetch system status");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to fetch system status");
     }
   }, []);
@@ -110,8 +117,8 @@ export default function CitiBikeAnalytics() {
       setUserTypeData(chartData.chart_user || []);
       setAnomaliesData(chartData.chart_anomalies || []);
       setWeatherImpactData(chartData.chart_weather || []);
-    } catch (err) {
-      console.error("Error fetching chart data:", err);
+    } catch {
+      console.error("Error fetching chart data");
       setError("Failed to fetch chart data");
     } finally {
       setChartsLoading(false);
@@ -122,8 +129,8 @@ export default function CitiBikeAnalytics() {
     try {
       const data = await apiService.fetchAnomalyData(forceRefresh);
       setAnomaliesScatterData(data);
-    } catch (err) {
-      console.error("Error fetching anomaly data:", err);
+    } catch {
+      console.error("Error fetching anomaly data");
       setError("Failed to fetch anomaly data");
     }
   }, []);
@@ -151,8 +158,8 @@ export default function CitiBikeAnalytics() {
         } else {
           setError("Failed to fetch dataset records");
         }
-      } catch (err) {
-        console.error("Error fetching dataset records:", err);
+      } catch {
+        console.error("Error fetching dataset records");
         setError("Failed to fetch dataset records");
       } finally {
         setDatasetLoading(false);
@@ -192,7 +199,7 @@ export default function CitiBikeAnalytics() {
       if (!result.success) {
         setError(result.message || "Failed to start training");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to start unsupervised model training");
     } finally {
       // Keep the button disabled until SSE confirms training is done

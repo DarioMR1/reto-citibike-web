@@ -1,14 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  TrendingUp,
-  TrendingDown,
-  Eye,
-  DollarSign,
-  Target,
-  Users,
-} from "lucide-react";
+import { Eye, DollarSign, Target, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface KPIData {
@@ -29,8 +22,6 @@ const KPICards = ({ data, loading = false }: KPICardsProps) => {
     {
       title: "Total Trips",
       value: data?.total_viajes?.toLocaleString() || "0",
-      change: "+15.8%",
-      changeType: "increase" as const,
       icon: Eye,
       bgColor: "bg-blue-800/10",
       iconColor: "text-blue-800",
@@ -39,18 +30,14 @@ const KPICards = ({ data, loading = false }: KPICardsProps) => {
     {
       title: "Total Revenue",
       value: `$${(data?.ingresos_totales || 0).toLocaleString()}`,
-      change: "-34.0%",
-      changeType: "decrease" as const,
       icon: DollarSign,
       bgColor: "bg-emerald-600/10",
       iconColor: "text-emerald-600",
       hoverColor: "hover:bg-emerald-600/15",
     },
     {
-      title: "Trips with Revenue",
-      value: `${(data?.viajes_con_ingresos || 0).toFixed(1)}%`,
-      change: "+24.2%",
-      changeType: "increase" as const,
+      title: "Average Revenue",
+      value: `$${(data?.ingreso_promedio || 0).toFixed(2)}`,
       icon: Target,
       bgColor: "bg-slate-600/10",
       iconColor: "text-slate-700",
@@ -59,8 +46,6 @@ const KPICards = ({ data, loading = false }: KPICardsProps) => {
     {
       title: "Active Stations",
       value: data?.estaciones_activas?.toLocaleString() || "0",
-      change: "+8.3%",
-      changeType: "increase" as const,
       icon: Users,
       bgColor: "bg-blue-800/10",
       iconColor: "text-blue-800",
@@ -91,8 +76,6 @@ const KPICards = ({ data, loading = false }: KPICardsProps) => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
       {kpiItems.map((item, index) => {
         const Icon = item.icon;
-        const TrendIcon =
-          item.changeType === "increase" ? TrendingUp : TrendingDown;
 
         return (
           <Card
@@ -113,34 +96,8 @@ const KPICards = ({ data, loading = false }: KPICardsProps) => {
               <div className="text-3xl font-bold text-slate-900 mb-3">
                 {item.value}
               </div>
-              <div className="flex items-center text-sm">
-                <div
-                  className={`p-1 rounded-lg mr-2 ${
-                    item.changeType === "increase"
-                      ? "bg-emerald-100/70"
-                      : "bg-red-100/70"
-                  }`}
-                >
-                  <TrendIcon
-                    className={`w-3 h-3 ${
-                      item.changeType === "increase"
-                        ? "text-emerald-600"
-                        : "text-red-600"
-                    }`}
-                  />
-                </div>
-                <span
-                  className={`font-semibold ${
-                    item.changeType === "increase"
-                      ? "text-emerald-600"
-                      : "text-red-600"
-                  }`}
-                >
-                  {item.change}
-                </span>
-                <span className="text-slate-600 ml-2 font-medium">
-                  vs last month
-                </span>
+              <div className="text-sm text-slate-600 font-medium">
+                Current data from CitiBike system
               </div>
             </CardContent>
           </Card>

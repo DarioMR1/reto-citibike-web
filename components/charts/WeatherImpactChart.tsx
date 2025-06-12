@@ -2,8 +2,6 @@
 
 import React from "react";
 import {
-  ScatterChart,
-  Scatter,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -15,8 +13,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Thermometer, TrendingUp } from "lucide-react";
 
+interface WeatherDataPoint {
+  temperature: number;
+  avg_revenue: number;
+  trip_count: number;
+}
+
 interface WeatherImpactChartProps {
-  data?: any[];
+  data?: WeatherDataPoint[];
   loading?: boolean;
 }
 
@@ -157,11 +161,11 @@ const WeatherImpactChart = ({
               }}
             />
             <Tooltip
-              formatter={(value: any, name: any) => {
+              formatter={(value: number | string, name: string) => {
                 if (name === "avg_revenue")
-                  return [`$${value.toFixed(2)}`, "Avg Revenue"];
+                  return [`$${Number(value).toFixed(2)}`, "Avg Revenue"];
                 if (name === "trip_count")
-                  return [value.toLocaleString(), "Trip Count"];
+                  return [Number(value).toLocaleString(), "Trip Count"];
                 return [value, name];
               }}
               labelFormatter={(label) => `Temperature: ${label}°C`}

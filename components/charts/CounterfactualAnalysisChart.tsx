@@ -4,8 +4,34 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, TrendingDown, MapPin, AlertTriangle } from "lucide-react";
 
+interface CounterfactualStats {
+  total_loss: number;
+  lost_trips: number;
+  loss_per_trip: number;
+  affected_stations: number;
+  events_analyzed: number;
+}
+
+interface EventSample {
+  STATION_ID?: string;
+  HOUR?: number;
+  VIAJES_PERDIDOS_ESTIMADOS?: number;
+  TEMPERATURE_2M?: number;
+  IS_WEEKEND?: boolean;
+}
+
+interface AnalysisMetadata {
+  events_processed: number;
+}
+
+interface CounterfactualData {
+  stats: CounterfactualStats;
+  events_sample?: EventSample[];
+  analysis_metadata?: AnalysisMetadata;
+}
+
 interface CounterfactualAnalysisChartProps {
-  data?: any;
+  data?: CounterfactualData;
   loading?: boolean;
 }
 
@@ -268,7 +294,7 @@ const CounterfactualAnalysisChart = ({
                 <tbody>
                   {events_sample
                     .slice(0, 5)
-                    .map((event: any, index: number) => (
+                    .map((event: EventSample, index: number) => (
                       <tr key={index} className="border-b border-slate-100">
                         <td className="py-2 px-3 font-medium text-slate-800">
                           {event.STATION_ID || "N/A"}

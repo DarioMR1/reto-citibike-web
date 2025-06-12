@@ -12,16 +12,14 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, AlertTriangle, Clock } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
+interface AnomalyDataPoint {
+  hour: number;
+  anomalies: number;
+}
 
 interface AnomaliesByHourChartProps {
-  data?: any[];
+  data?: AnomalyDataPoint[];
   loading?: boolean;
 }
 
@@ -80,7 +78,7 @@ const AnomaliesByHourChart = ({
   // Get busy hours (hours with above-average anomalies)
   const busyHours = data.filter((item) => item.anomalies > averageAnomalies);
 
-  const formatTooltip = (value: any, name: any) => {
+  const formatTooltip = (value: number | string, name: string) => {
     if (name === "anomalies") {
       return [`${value} anomalies`, "Detected Anomalies"];
     }

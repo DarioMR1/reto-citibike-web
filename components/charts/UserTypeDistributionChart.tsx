@@ -1,19 +1,18 @@
 "use client";
 
 import React from "react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  Legend,
-} from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, UserX } from "lucide-react";
 
+interface UserTypeData {
+  name: string;
+  value: number;
+  total: number;
+}
+
 interface UserTypeDistributionChartProps {
-  data?: any[];
+  data?: UserTypeData[];
   loading?: boolean;
 }
 
@@ -21,9 +20,13 @@ const UserTypeDistributionChart = ({
   data,
   loading = false,
 }: UserTypeDistributionChartProps) => {
-  const COLORS = ["#1e40af", "#059669", "#64748b"];
-
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: Array<{ value: number; payload: UserTypeData }>;
+  }) => {
     if (active && payload && payload.length) {
       const data = payload[0];
       const percentage = (

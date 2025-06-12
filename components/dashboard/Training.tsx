@@ -34,9 +34,66 @@ interface TrainingProps {
 interface TrainingResult {
   success: boolean;
   message?: string;
-  results?: any;
+  results?: {
+    num_anomalias_iso?: number;
+    num_anomalias_lof?: number;
+    num_consenso?: number;
+  };
   model_type?: string;
-  metrics?: any;
+  metrics?: {
+    r2?: number;
+    rmse?: number;
+    mae?: number;
+  };
+}
+
+interface CounterfactualData {
+  stats: {
+    total_loss: number;
+    lost_trips: number;
+    loss_per_trip: number;
+    affected_stations: number;
+    events_analyzed: number;
+  };
+  events_sample?: Array<{
+    STATION_ID?: string;
+    HOUR?: number;
+    VIAJES_PERDIDOS_ESTIMADOS?: number;
+    TEMPERATURE_2M?: number;
+    IS_WEEKEND?: boolean;
+  }>;
+  analysis_metadata?: {
+    events_processed: number;
+  };
+}
+
+interface AnomalyAnalysisData {
+  stats: {
+    num_anomalies: number;
+    total_records: number;
+    anomaly_rate: number;
+  };
+  top_anomalies?: Array<{
+    STATION_ID?: string;
+    station_id?: string;
+    HOUR?: number;
+    hour?: number;
+    INGRESO_PROMEDIO?: number;
+    ingreso_promedio?: number;
+    VIAJES_COUNT?: number;
+    viajes_count?: number;
+    IS_WEEKEND?: boolean;
+    is_weekend?: boolean;
+  }>;
+  scatter_data?: {
+    normal_points: Array<{ x: number; y: number; type: string }>;
+    anomaly_points: Array<{ x: number; y: number; type: string }>;
+  };
+}
+
+interface ScatterData {
+  normal_points: Array<{ x: number; y: number; type: string }>;
+  anomaly_points: Array<{ x: number; y: number; type: string }>;
 }
 
 const Training: React.FC<TrainingProps> = ({ status }) => {
@@ -49,9 +106,12 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
   const [error, setError] = useState("");
 
   // Chart data states
-  const [counterfactualData, setCounterfactualData] = useState<any>(null);
-  const [anomalyAnalysisData, setAnomalyAnalysisData] = useState<any>(null);
-  const [anomalyScatterData, setAnomalyScatterData] = useState<any>(null);
+  const [counterfactualData, setCounterfactualData] =
+    useState<CounterfactualData | null>(null);
+  const [anomalyAnalysisData, setAnomalyAnalysisData] =
+    useState<AnomalyAnalysisData | null>(null);
+  const [anomalyScatterData, setAnomalyScatterData] =
+    useState<ScatterData | null>(null);
   const [chartsLoading, setChartsLoading] = useState(false);
   const [counterfactualLoading, setCounterfactualLoading] = useState(false);
   const [counterfactualProgress, setCounterfactualProgress] = useState(0);
@@ -302,16 +362,14 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
   };
 
   const TabButton = ({
-    id,
     label,
     icon: Icon,
     isActive,
     onClick,
     hasData = false,
   }: {
-    id: string;
     label: string;
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
     isActive: boolean;
     onClick: () => void;
     hasData?: boolean;
@@ -346,14 +404,12 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
         {/* Navigation Tabs */}
         <div className="flex flex-wrap gap-4 mb-8">
           <TabButton
-            id="training"
             label="Training Controls"
             icon={Brain}
             isActive={activeTab === "training"}
             onClick={() => setActiveTab("training")}
           />
           <TabButton
-            id="supervised"
             label="Supervised Analysis"
             icon={BarChart3}
             isActive={activeTab === "supervised"}
@@ -361,7 +417,6 @@ const Training: React.FC<TrainingProps> = ({ status }) => {
             hasData={!!supervisedResult?.success && !!counterfactualData}
           />
           <TabButton
-            id="unsupervised"
             label="Unsupervised Analysis"
             icon={Activity}
             isActive={activeTab === "unsupervised"}

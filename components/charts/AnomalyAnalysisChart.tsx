@@ -9,18 +9,44 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, Eye, Target, Zap } from "lucide-react";
 
+interface AnomalyStats {
+  num_anomalies: number;
+  total_records: number;
+  anomaly_rate: number;
+}
+
+interface AnomalyRecord {
+  STATION_ID?: string;
+  station_id?: string;
+  HOUR?: number;
+  hour?: number;
+  INGRESO_PROMEDIO?: number;
+  ingreso_promedio?: number;
+  VIAJES_COUNT?: number;
+  viajes_count?: number;
+  IS_WEEKEND?: boolean;
+  is_weekend?: boolean;
+}
+
+interface ScatterDataPoint {
+  x: number;
+  y: number;
+  type: string;
+}
+
+interface ScatterData {
+  normal_points: ScatterDataPoint[];
+  anomaly_points: ScatterDataPoint[];
+}
+
 interface AnomalyAnalysisChartProps {
-  stats?: any;
-  topAnomalies?: any[];
-  scatterData?: {
-    normal_points: any[];
-    anomaly_points: any[];
-  };
+  stats?: AnomalyStats;
+  topAnomalies?: AnomalyRecord[];
+  scatterData?: ScatterData;
   loading?: boolean;
 }
 
@@ -67,12 +93,12 @@ const AnomalyAnalysisChart = ({
     );
   }
 
-  const formatTooltip = (value: any, name: any) => {
+  const formatTooltip = (value: number | string, name: string) => {
     if (name === "y") {
       return [`${value} trips`, "Trip Count"];
     }
     if (name === "x") {
-      return [`$${value.toFixed(2)}`, "Average Revenue"];
+      return [`$${Number(value).toFixed(2)}`, "Average Revenue"];
     }
     return [value, name];
   };
@@ -308,7 +334,7 @@ const AnomalyAnalysisChart = ({
                   <tbody>
                     {topAnomalies
                       .slice(0, 5)
-                      .map((anomaly: any, index: number) => (
+                      .map((anomaly: AnomalyRecord, index: number) => (
                         <tr key={index} className="border-b border-red-100">
                           <td className="py-2 px-3 font-medium text-red-800">
                             {anomaly.STATION_ID || anomaly.station_id || "N/A"}

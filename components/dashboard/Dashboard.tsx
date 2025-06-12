@@ -13,7 +13,6 @@ import type { DashboardProps } from "@/types";
 
 const Dashboard: React.FC<DashboardProps> = ({
   kpis,
-  status,
   loading,
   chartsLoading,
   revenueByHourData,

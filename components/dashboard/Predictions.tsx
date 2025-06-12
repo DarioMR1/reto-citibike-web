@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ChangeEvent, useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -42,7 +42,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { PredictionsProps, PredictionRequest } from "@/types";
+import type { PredictionsProps } from "@/types";
 
 const Predictions: React.FC<PredictionsProps> = ({
   status,

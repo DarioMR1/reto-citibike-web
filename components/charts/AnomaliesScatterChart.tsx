@@ -14,9 +14,15 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 
+interface DataPoint {
+  x: number;
+  y: number;
+  type: string;
+}
+
 interface AnomaliesScatterChartProps {
-  normalPoints?: any[];
-  anomalyPoints?: any[];
+  normalPoints?: DataPoint[];
+  anomalyPoints?: DataPoint[];
   loading?: boolean;
 }
 
@@ -65,7 +71,13 @@ const AnomaliesScatterChart = ({
     );
   }
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: Array<{ payload: DataPoint }>;
+  }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
