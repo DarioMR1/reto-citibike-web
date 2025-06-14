@@ -1,308 +1,244 @@
-# CitiBike Analytics Platform
+# CitiBike Analytics Frontend
 
-Una plataforma moderna de análisis y machine learning para operaciones de CitiBike, con un backend FastAPI desplegado en Google Cloud Run y un frontend Next.js desplegado en Vercel.
+Interface web moderna desarrollada con Next.js para la plataforma de análisis y machine learning de CitiBike. Este frontend se conecta con el backend FastAPI para proporcionar visualizaciones interactivas, dashboards y funcionalidades de predicción.
+
+## Desarrollador
+
+**Darío Mariscal Rocha** - Equipo 5
 
 ## Arquitectura
 
-- **Backend**: FastAPI + Python (ML Models, Snowflake DB) → Cloud Run
-- **Frontend**: Next.js + TypeScript + Tailwind CSS → Vercel
-- **Base de Datos**: Snowflake
-- **ML Models**: Scikit-learn (Supervisado y No supervisado)
+Este proyecto implementa la interfaz de usuario para el sistema de análisis de CitiBike con las siguientes tecnologías:
 
-## 📁 Estructura del Proyecto
+- **Framework**: Next.js 15 con React 19
+- **Lenguaje**: TypeScript
+- **Estilos**: Tailwind CSS 4
+- **Componentes UI**: Radix UI primitives
+- **Iconos**: Lucide React
+- **Gráficos**: Recharts
+- **Tablas**: TanStack React Table
+- **Gestión de paquetes**: pnpm
+
+## Estructura del Proyecto
 
 ```
-├── reto-citibike/                # Backend FastAPI
-│   ├── main.py                   # Servidor FastAPI principal
-│   ├── database.py               # Conexiones a Snowflake
-│   ├── models.py                 # Modelos ML
-│   ├── visualizations.py         # Generación de gráficos
-│   ├── simulations.py            # Simulaciones y predicciones
-│   ├── requirements.txt          # Dependencias Python
-│   ├── Dockerfile               # Configuración Docker
-│   ├── Makefile                 # Comandos de despliegue
-│   └── .env                     # Variables de entorno
-├── reto-citibike-web/           # Frontend Next.js
-│   ├── app/
-│   │   └── page.tsx             # Página principal del dashboard
-│   ├── components/ui/           # Componentes UI
-│   ├── lib/
-│   │   └── utils.ts             # Utilidades
-│   └── env.example              # Variables de entorno ejemplo
-└── README.md                    # Este archivo
+reto-citibike-web/
+├── app/
+│   ├── page.tsx              # Página principal del dashboard
+│   ├── layout.tsx            # Layout principal de la aplicación
+│   ├── globals.css           # Estilos globales
+│   └── favicon.ico           # Icono de la aplicación
+├── components/
+│   ├── dashboard/            # Componentes específicos del dashboard
+│   ├── charts/               # Componentes de gráficos y visualizaciones
+│   └── ui/                   # Componentes UI reutilizables (Radix UI)
+├── services/
+│   └── api.ts                # Servicios para comunicación con el backend
+├── types/
+│   └── index.ts              # Definiciones de tipos TypeScript
+├── lib/
+│   └── utils.ts              # Funciones utilitarias
+├── public/                   # Archivos estáticos
+├── package.json              # Dependencias y scripts
+├── tsconfig.json             # Configuración de TypeScript
+├── next.config.ts            # Configuración de Next.js
+├── postcss.config.mjs        # Configuración de PostCSS
+├── eslint.config.mjs         # Configuración de ESLint
+└── env.example               # Plantilla de variables de entorno
 ```
 
-## 🚀 Despliegue del Backend (FastAPI en Cloud Run)
+## Conexión con el Backend
 
-### 1. Configurar Variables de Entorno
+El frontend se comunica con el backend FastAPI (`reto-citibike`) a través de:
 
-En el directorio `reto-citibike/`, crea un archivo `.env` basado en `env.example`:
+### Configuración de API
 
-```bash
-cd reto-citibike
-cp env.example .env
-```
+- **Archivo**: `services/api.ts`
+- **URL Base**: Configurada a través de `NEXT_PUBLIC_API_URL`
+- **Métodos**: GET, POST para interactuar con todos los endpoints del backend
 
-Edita el archivo `.env` con tus valores:
+### Endpoints Utilizados
 
-```env
-# Google Cloud Configuration
-GOOGLE_CLOUD_PROJECT=your-project-id
-GOOGLE_CLOUD_LOCATION=us-central1
-SERVICE_NAME=citibike-analytics-api
-
-# Snowflake Database Configuration
-SNOWFLAKE_ACCOUNT=your_account_here
-SNOWFLAKE_USER=your_user_here
-SNOWFLAKE_PASSWORD=your_password_here
-SNOWFLAKE_DATABASE=your_database_here
-SNOWFLAKE_SCHEMA=your_schema_here
-
-# Application Configuration
-APP_ENV=production
-DEBUG=False
-PORT=8000
-```
-
-### 2. Configurar Google Cloud
-
-```bash
-# Autenticarse en Google Cloud
-gcloud auth login
-gcloud auth application-default login
-
-# Configurar el proyecto
-gcloud config set project YOUR_PROJECT_ID
-
-# Habilitar APIs necesarias
-gcloud services enable run.googleapis.com
-gcloud services enable cloudbuild.googleapis.com
-```
-
-### 3. Desplegar usando Makefile
-
-```bash
-cd reto-citibike
-
-# Desplegar el servicio
-make deploy
-
-# Otros comandos disponibles:
-make status    # Ver estado del servicio
-make logs      # Ver logs del servicio
-make delete    # Eliminar el servicio
-```
-
-### 4. Obtener la URL del servicio
-
-```bash
-# Ver información del servicio desplegado
-make status
-
-# O directamente obtener la URL
-gcloud run services describe citibike-analytics-api \
-  --region us-central1 \
-  --format 'value(status.url)'
-```
-
-## 🌐 Despliegue del Frontend (Next.js en Vercel)
-
-### 1. Preparar el proyecto
-
-```bash
-cd reto-citibike-web
-
-# Instalar dependencias
-pnpm install
-
-# Crear archivo de variables de entorno
-cp env.example .env.local
-```
-
-### 2. Configurar Variables de Entorno
-
-En `.env.local`:
-
-```env
-# Reemplaza con tu URL de Cloud Run
-NEXT_PUBLIC_API_URL=https://citibike-analytics-api-xxxxxxxxx-uc.a.run.app
-```
-
-### 3. Desplegar en Vercel
-
-#### Opción A: Usando Vercel CLI
-
-```bash
-# Instalar Vercel CLI
-npm i -g vercel
-
-# Desplegar
-vercel
-
-# Configurar variables de entorno en producción
-vercel env add NEXT_PUBLIC_API_URL
-```
-
-#### Opción B: Usando GitHub + Vercel Dashboard
-
-1. Sube el código a GitHub
-2. Conecta tu repositorio en [vercel.com](https://vercel.com)
-3. Configura la variable de entorno `NEXT_PUBLIC_API_URL` en el dashboard
-4. Despliega automáticamente
-
-### 4. Probar la aplicación
-
-Tu aplicación estará disponible en:
-
-- **Frontend**: `https://your-app.vercel.app`
-- **Backend API**: `https://your-service-url.run.app`
-
-## 🧪 Desarrollo Local
-
-### Backend Local
-
-```bash
-cd reto-citibike
-
-# Instalar dependencias
-pip install -r requirements.txt
-
-# Ejecutar servidor (asegúrate de tener el archivo .env configurado)
-uvicorn main:app --reload --port 8000
-```
-
-### Frontend Local
-
-```bash
-cd reto-citibike-web
-
-# Instalar dependencias
-pnpm install
-
-# Ejecutar en desarrollo
-pnpm dev
-```
-
-La aplicación estará disponible en `http://localhost:3000` y se conectará al backend en `http://localhost:8000`.
-
-## 🛠️ Comandos de Makefile
-
-El proyecto incluye un `Makefile` con comandos útiles para la gestión del servicio:
-
-```bash
-make deploy    # Despliega el servicio en Cloud Run
-make delete    # Elimina el servicio de Cloud Run
-make status    # Muestra el estado del servicio
-make logs      # Muestra los logs del servicio
-```
-
-## 📊 Funcionalidades
-
-### Dashboard Principal
-
-- KPIs de ingresos y viajes
-- Visualizaciones interactivas
-- Estado del sistema en tiempo real
-
-### Entrenamiento de Modelos
-
-- **Modelo Supervisado**: Predice ingresos por minutos excedentes
-- **Modelo No Supervisado**: Detecta anomalías en patrones de uso
-
-### Simulaciones y Predicciones
-
-- Predicciones individuales de ingresos
-- Análisis de escenarios por lotes
-- Detección de anomalías en tiempo real
-- Análisis contrafactual de pérdidas
-
-### Análisis de Anomalías
-
-- Detección de patrones inusuales
-- Análisis temporal y por estación
-- Métricas de rendimiento
-
-## 🔧 API Endpoints
-
-### Estado del Sistema
-
-- `GET /api/status` - Estado de los modelos
-- `POST /api/models/load` - Cargar modelos guardados
-- `POST /api/models/save` - Guardar modelos actuales
-
-### Dashboard
-
+- `GET /api/status` - Estado del sistema
 - `GET /api/dashboard` - Datos del dashboard y KPIs
-- `GET /api/visualizations/{chart_type}` - Gráficos específicos
-
-### Entrenamiento
-
-- `POST /api/train/supervised` - Entrenar modelo supervisado
-- `POST /api/train/unsupervised` - Entrenar detección de anomalías
-
-### Predicciones
-
-- `POST /api/predict/single` - Predicción individual
-- `POST /api/predict/anomaly` - Detectar anomalía
+- `POST /api/train/supervised` - Entrenamiento de modelos supervisados
+- `POST /api/train/unsupervised` - Entrenamiento de modelos no supervisados
+- `POST /api/predict/single` - Predicciones individuales
+- `POST /api/predict/anomaly` - Detección de anomalías
 - `POST /api/analyze/batch` - Análisis por lotes
-
-### Análisis
-
 - `GET /api/anomalies/analysis` - Análisis de anomalías
 - `GET /api/counterfactual/analysis` - Análisis contrafactual
 
-## 🛠️ Tecnologías Utilizadas
+### Tipos de Datos
 
-### Backend
+- **Archivo**: `types/index.ts`
+- **Definiciones**: Interfaces TypeScript que coinciden con los modelos Pydantic del backend
+- **Cobertura**: Todos los tipos de datos intercambiados entre frontend y backend
 
-- **FastAPI**: Framework web moderno para Python
-- **Pandas/NumPy**: Procesamiento de datos
-- **Scikit-learn**: Machine learning
-- **Plotly**: Visualizaciones
-- **Snowflake**: Base de datos
-- **Pydantic**: Validación de datos
+## Funcionalidades
 
-### Frontend
+### Dashboard Principal
 
-- **Next.js 14**: Framework React
-- **TypeScript**: Tipado estático
-- **Tailwind CSS**: Estilos
-- **Radix UI**: Componentes accesibles
-- **Lucide React**: Iconos
+- **KPIs en tiempo real**: Métricas clave del sistema CitiBike
+- **Visualizaciones interactivas**: Gráficos de barras, líneas y scatter plots
+- **Tablas de datos**: Información detallada con filtrado y ordenamiento
+- **Responsivo**: Adaptable a diferentes tamaños de pantalla
 
-### Despliegue
+### Predicciones
 
-- **Google Cloud Run**: Backend containerizado
-- **Vercel**: Frontend estático
-- **Docker**: Containerización
-- **Make**: Automatización de despliegue
+- **Predicciones individuales**: Formularios para estimar ingresos por viaje
+- **Análisis por lotes**: Evaluación de múltiples escenarios
+- **Detección de anomalías**: Identificación de patrones inusuales
+- **Análisis contrafactual**: Estimación de pérdidas por escasez
 
-## 🔒 Seguridad
+### Machine Learning
 
-- Variables de entorno para credenciales sensibles
-- CORS configurado correctamente
-- Validación de entrada con Pydantic
-- Usuario no-root en el contenedor Docker
-- Timeouts y límites de recursos en Cloud Run
+- **Entrenamiento de modelos**: Interfaz para entrenar modelos supervisados y no supervisados
+- **Métricas de rendimiento**: Visualización de R², RMSE, MAE
+- **Comparación de algoritmos**: Random Forest vs Gradient Boosting
+- **Gestión de modelos**: Estado de entrenamiento y resultados
 
-## 📈 Monitoreo
+## Instalación y Configuración
 
-- Logs centralizados en Google Cloud Logging
-- Métricas de rendimiento en Cloud Run
-- Análisis de uso en Vercel Analytics
+### Prerrequisitos
 
-## 🤝 Contribución
+- Node.js 18+
+- pnpm (recomendado) o npm
+- Backend CitiBike corriendo (`reto-citibike`)
+
+### Configuración del Entorno
+
+1. **Clonar variables de entorno**:
+
+```bash
+cp env.example .env.local
+```
+
+2. **Configurar API URL**:
+
+```bash
+# Para desarrollo local
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Para producción
+NEXT_PUBLIC_API_URL=https://your-cloud-run-url.run.app
+```
+
+### Instalación de Dependencias
+
+```bash
+pnpm install
+```
+
+### Ejecución en Desarrollo
+
+```bash
+pnpm dev
+```
+
+La aplicación estará disponible en `http://localhost:3000`
+
+### Build para Producción
+
+```bash
+pnpm build
+pnpm start
+```
+
+## Scripts Disponibles
+
+- `pnpm dev` - Inicia el servidor de desarrollo
+- `pnpm build` - Construye la aplicación para producción
+- `pnpm start` - Inicia la aplicación en modo producción
+- `pnpm lint` - Ejecuta el linter ESLint
+
+## Dependencias Principales
+
+### Producción
+
+- **next**: 15.3.3 - Framework React
+- **react**: 19.0.0 - Librería de UI
+- **@radix-ui/\***: Componentes UI primitivos
+- **recharts**: 2.15.3 - Gráficos interactivos
+- **@tanstack/react-table**: 8.21.3 - Tablas avanzadas
+- **tailwind-merge**: 3.3.1 - Utilitarios de Tailwind
+- **lucide-react**: 0.514.0 - Iconos
+- **date-fns**: 4.1.0 - Manipulación de fechas
+
+### Desarrollo
+
+- **typescript**: 5 - Tipado estático
+- **tailwindcss**: 4 - Framework CSS
+- **eslint**: 9 - Linter de código
+
+## Despliegue
+
+### Vercel (Recomendado)
+
+1. **Conectar repositorio** con Vercel
+2. **Configurar variables de entorno**:
+   - `NEXT_PUBLIC_API_URL`: URL del backend en Cloud Run
+3. **Deploy automático** en cada push a main
+
+### Otras Plataformas
+
+La aplicación es compatible con cualquier plataforma que soporte Next.js:
+
+- Netlify
+- AWS Amplify
+- Google Cloud Run
+- Docker
+
+## Desarrollo
+
+### Estructura de Componentes
+
+- **Componentes UI**: Reutilizables, basados en Radix UI
+- **Componentes de Dashboard**: Específicos para visualizaciones
+- **Componentes de Gráficos**: Wrappers de Recharts
+- **Hooks personalizados**: Para manejo de estado y API
+
+### Estándares de Código
+
+- **TypeScript**: Tipado estricto
+- **ESLint**: Configuración de Next.js
+- **Tailwind CSS**: Utility-first CSS
+- **Componentes funcionales**: Con hooks de React
+
+### Testing
+
+El proyecto está configurado para testing con Jest y React Testing Library (configuración disponible para extensión).
+
+## Integración con Backend
+
+### Flujo de Datos
+
+1. **Frontend** envía peticiones HTTP al backend FastAPI
+2. **Backend** procesa datos con Snowflake y modelos ML
+3. **Backend** retorna JSON estructurado
+4. **Frontend** renderiza datos en componentes React
+
+### Manejo de Errores
+
+- Validación de respuestas API
+- Estados de carga y error
+- Fallbacks para datos no disponibles
+- Notificaciones de usuario con toast
+
+### Sincronización
+
+- Estado reactivo con React hooks
+- Refetch automático de datos
+- Optimistic updates donde apropiado
+
+## Contribución
 
 1. Fork del repositorio
-2. Crear rama feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit cambios (`git commit -am 'Agregar nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Crear Pull Request
+2. Crear rama de feature
+3. Desarrollar cambios
+4. Ejecutar linting y tests
+5. Crear pull request
 
-## 📝 Licencia
+## Licencia
 
-Este proyecto está bajo la licencia MIT. Ver el archivo `LICENSE` para más detalles.
-
----
-
-Para soporte técnico o preguntas, crea un issue en el repositorio de GitHub.
+MIT License
